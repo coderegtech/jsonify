@@ -67,7 +67,7 @@ const tocItems = [
   { id: "client-integration", label: "Client Integration" },
   { id: "react-hook", label: "React Hook API" },
   { id: "vanilla-js", label: "Vanilla JS / Any Framework" },
-  { id: "protocol", label: "WebSocket Protocol" },
+  { id: "protocol", label: "Socket.IO Events" },
   { id: "config", label: "Configuration" },
   { id: "ai-prompt", label: "AI Prompt" },
   { id: "troubleshooting", label: "Troubleshooting" },
@@ -174,7 +174,7 @@ const Docs = () => {
               Documentation
             </h1>
             <p className="text-muted-foreground leading-relaxed max-w-2xl">
-              Learn how to set up the Jsonify WebSocket server and integrate
+              Learn how to set up the Jsonify Socket.IO server and integrate
               real-time JSON syncing into your website or application.
             </p>
           </div>
@@ -183,7 +183,7 @@ const Docs = () => {
           <Section id="overview" title="Overview">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                Jsonify provides a lightweight WebSocket server that keeps your
+                Jsonify provides a lightweight Socket.IO server that keeps your
                 JSON content in sync across multiple clients in real time. When
                 you edit content in one browser tab, every other connected tab
                 instantly receives the update.
@@ -216,8 +216,8 @@ const Docs = () => {
               </div>
               <div className="rounded-lg border border-border bg-muted/30 p-4 font-mono text-xs leading-loose">
                 <pre>{`┌─────────────┐       ┌──────────────────┐       ┌─────────────┐
-│  Client A   │◄─────►│  WebSocket Server │◄─────►│  Client B   │
-│  (Browser)  │ ws:// │  (ws-server.ts)   │ ws:// │  (Browser)  │
+│  Client A   │◄─────►│  Socket.IO Server │◄─────►│  Client B   │
+│  (Browser)  │ http: │  (ws-server.ts)   │ http: │  (Browser)  │
 └─────────────┘       └──────────────────┘       └─────────────┘`}</pre>
               </div>
             </div>
@@ -237,7 +237,7 @@ const Docs = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-foreground mb-2">
-                    2. Start the WebSocket server
+                    2. Start the Socket.IO server
                   </p>
                   <CodeBlock code="npm run ws:server" />
                 </div>
@@ -274,7 +274,7 @@ const Docs = () => {
           <Section id="server-setup" title="Server Setup">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                The WebSocket server is a standalone Node.js script located at{" "}
+                The Socket.IO server is a standalone Node.js script located at{" "}
                 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
                   server/ws-server.ts
                 </code>
@@ -289,7 +289,7 @@ const Docs = () => {
                 <p className="mt-2">
                   Output:{" "}
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                    [ws] WebSocket server running on ws://localhost:4000
+                    [socket.io] Server running on http://localhost:4000
                   </code>
                 </p>
               </div>
@@ -316,39 +316,39 @@ set WS_PORT=8080 && npm run ws:server`}
                 </p>
                 <CodeBlock
                   language="typescript"
-                  code={`import { WebSocket, WebSocketServer } from "ws";
+                  code={`import { Server } from "socket.io";
 
 const PORT = Number(process.env.WS_PORT) || 4000;
-const wss = new WebSocketServer({ port: PORT });
 
-let latestData: unknown = null;
-const clients = new Set<WebSocket>();
-
-wss.on("connection", (ws) => {
-  clients.add(ws);
-
-  // Send current state to new client
-  if (latestData !== null) {
-    ws.send(JSON.stringify({ type: "sync", data: latestData }));
-  }
-
-  ws.on("message", (raw) => {
-    const msg = JSON.parse(raw.toString());
-    if (msg.type === "update") {
-      latestData = msg.data;
-      // Broadcast to all OTHER clients
-      Array.from(clients).forEach((client) => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: "sync", data: latestData }));
-        }
-      });
-    }
-  });
-
-  ws.on("close", () => clients.delete(ws));
+const io = new Server(PORT, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
-console.log(\`[ws] Server running on ws://localhost:\${PORT}\`);`}
+let latestData: unknown = null;
+
+io.on("connection", (socket) => {
+  console.log(\`[socket.io] Client connected\`);
+
+  // Send current data to newly connected client
+  if (latestData !== null) {
+    socket.emit("sync", latestData);
+  }
+
+  socket.on("update", (data: unknown) => {
+    latestData = data;
+    // Broadcast to all OTHER connected clients
+    socket.broadcast.emit("sync", latestData);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(\`[socket.io] Client disconnected\`);
+  });
+});
+
+console.log(\`[socket.io] Server running on http://localhost:\${PORT}\`);`}
                 />
               </div>
 
@@ -397,24 +397,25 @@ console.log(\`[ws] Server running on ws://localhost:\${PORT}\`);`}
                     Vanilla JS / Any Framework
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Connect with native WebSocket API — works everywhere
+                    Connect with Socket.IO client — works everywhere
                   </p>
                 </a>
               </div>
 
               <div>
                 <p className="text-xs font-medium text-foreground mb-2">
-                  Install the{" "}
-                  <code className="bg-muted px-1 rounded text-[11px]">ws</code>{" "}
-                  package (server-side only)
+                  Install Socket.IO packages
                 </p>
-                <CodeBlock code={`npm install ws\nnpm install -D @types/ws`} />
+                <CodeBlock code={`npm install socket.io socket.io-client`} />
                 <p className="mt-2 text-xs">
-                  The browser has a built-in{" "}
                   <code className="bg-muted px-1 rounded text-[11px]">
-                    WebSocket
+                    socket.io
                   </code>{" "}
-                  API — no client-side packages needed.
+                  is for the server,{" "}
+                  <code className="bg-muted px-1 rounded text-[11px]">
+                    socket.io-client
+                  </code>{" "}
+                  is for the browser client.
                 </p>
               </div>
             </div>
@@ -487,13 +488,17 @@ function App() {
                     <code className="bg-muted px-1 rounded font-mono text-[11px]">
                       src/hooks/useWebSocket.ts
                     </code>{" "}
-                    and paste the code below. This is the complete hook — no
-                    other dependencies needed beyond React.
+                    and paste the code below. Requires{" "}
+                    <code className="bg-muted px-1 rounded font-mono text-[11px]">
+                      socket.io-client
+                    </code>{" "}
+                    package.
                   </p>
                 </div>
                 <CodeBlock
                   language="typescript"
                   code={`import { useCallback, useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 
 type JsonValue =
   | string
@@ -505,28 +510,22 @@ type JsonValue =
 
 type WsStatus = "disconnected" | "connecting" | "connected";
 
-const DEFAULT_WS_URL = "ws://localhost:4000";
-const RECONNECT_DELAY = 3000;
+const DEFAULT_WS_URL = "http://localhost:4000";
 
 export function useWebSocket(
   data: JsonValue,
   onRemoteUpdate: (data: JsonValue) => void,
 ) {
-  const wsRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [status, setStatus] = useState<WsStatus>("disconnected");
   const [wsUrl, setWsUrl] = useState(DEFAULT_WS_URL);
   const isRemoteUpdate = useRef(false);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const enabled = useRef(false);
 
   const cleanup = useCallback(() => {
-    if (reconnectTimer.current) {
-      clearTimeout(reconnectTimer.current);
-      reconnectTimer.current = null;
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
     setStatus("disconnected");
   }, []);
@@ -537,41 +536,32 @@ export function useWebSocket(
       enabled.current = true;
       setStatus("connecting");
 
-      const ws = new WebSocket(url);
-      wsRef.current = ws;
+      const socket = io(url, {
+        reconnection: true,
+        reconnectionDelay: 3000,
+        reconnectionAttempts: Infinity,
+      });
+      socketRef.current = socket;
 
-      ws.onopen = () => {
+      socket.on("connect", () => {
         setStatus("connected");
-        console.log("[ws] Connected to", url);
-        ws.send(JSON.stringify({ type: "update", data }));
-      };
+        console.log("[socket.io] Connected to", url);
+        socket.emit("update", data);
+      });
 
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === "sync" && msg.data !== undefined) {
-            isRemoteUpdate.current = true;
-            onRemoteUpdate(msg.data);
-          }
-        } catch (err) {
-          console.error("[ws] Failed to parse message:", err);
-        }
-      };
+      socket.on("sync", (syncData: JsonValue) => {
+        isRemoteUpdate.current = true;
+        onRemoteUpdate(syncData);
+      });
 
-      ws.onclose = () => {
+      socket.on("disconnect", () => {
         setStatus("disconnected");
-        if (enabled.current) {
-          reconnectTimer.current = setTimeout(
-            () => connect(url),
-            RECONNECT_DELAY,
-          );
-        }
-      };
+        console.log("[socket.io] Disconnected");
+      });
 
-      ws.onerror = (err) => {
-        console.error("[ws] Error:", err);
-        ws.close();
-      };
+      socket.on("connect_error", (err) => {
+        console.error("[socket.io] Connection error:", err);
+      });
     },
     [cleanup, data, onRemoteUpdate],
   );
@@ -587,8 +577,8 @@ export function useWebSocket(
       isRemoteUpdate.current = false;
       return;
     }
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "update", data }));
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("update", data);
     }
   }, [data]);
 
@@ -677,7 +667,7 @@ export function useWebSocket(
                         <td className="px-4 py-2 font-mono">wsUrl</td>
                         <td className="px-4 py-2 font-mono">string</td>
                         <td className="px-4 py-2">
-                          WebSocket URL (default: ws://localhost:4000)
+                          Socket.IO URL (default: http://localhost:4000)
                         </td>
                       </tr>
                       <tr className="border-b border-border">
@@ -695,7 +685,7 @@ export function useWebSocket(
                           (url) =&gt; void
                         </td>
                         <td className="px-4 py-2">
-                          Start WebSocket connection
+                          Start Socket.IO connection
                         </td>
                       </tr>
                       <tr>
@@ -716,11 +706,11 @@ export function useWebSocket(
           <Section id="vanilla-js" title="Vanilla JS / Any Framework">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                No framework needed. Use the browser's built-in{" "}
+                Use the{" "}
                 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                  WebSocket
+                  socket.io-client
                 </code>{" "}
-                API:
+                package for browser integration:
               </p>
 
               <div>
@@ -729,23 +719,20 @@ export function useWebSocket(
                 </p>
                 <CodeBlock
                   language="javascript"
-                  code={`const ws = new WebSocket("ws://localhost:4000");
+                  code={`import { io } from "socket.io-client";
+
+const socket = io("http://localhost:4000");
 
 // Receive updates from other clients
-ws.onmessage = (event) => {
-  const msg = JSON.parse(event.data);
-  if (msg.type === "sync") {
-    console.log("Remote update:", msg.data);
-    // Update your UI with msg.data
-    renderContent(msg.data);
-  }
-};
+socket.on("sync", (data) => {
+  console.log("Remote update:", data);
+  // Update your UI with data
+  renderContent(data);
+});
 
 // Send your local changes to the server
 function pushUpdate(data) {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: "update", data }));
-  }
+  socket.emit("update", data);
 }
 
 // Example: push on form change
@@ -754,47 +741,42 @@ document.querySelector("#editor").addEventListener("input", (e) => {
   pushUpdate(data);
 });
 
-ws.onopen = () => console.log("Connected");
-ws.onclose = () => console.log("Disconnected");`}
+socket.on("connect", () => console.log("Connected"));
+socket.on("disconnect", () => console.log("Disconnected"));`}
                 />
               </div>
 
               <div>
                 <p className="text-xs font-medium text-foreground mb-2">
-                  With auto-reconnect
+                  With auto-reconnect (built-in)
                 </p>
                 <CodeBlock
                   language="javascript"
-                  code={`function createSyncClient(url, onData) {
-  let ws;
+                  code={`import { io } from "socket.io-client";
 
-  function connect() {
-    ws = new WebSocket(url);
-    ws.onopen = () => console.log("[sync] Connected");
-    ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
-      if (msg.type === "sync") onData(msg.data);
-    };
-    ws.onclose = () => {
-      console.log("[sync] Disconnected, retrying in 3s...");
-      setTimeout(connect, 3000);
-    };
-  }
+function createSyncClient(url, onData) {
+  const socket = io(url, {
+    reconnection: true,
+    reconnectionDelay: 3000,
+    reconnectionAttempts: Infinity,
+  });
 
-  connect();
+  socket.on("connect", () => console.log("[sync] Connected"));
+  socket.on("sync", onData);
+  socket.on("disconnect", () => console.log("[sync] Disconnected"));
 
   return {
     push(data) {
-      if (ws?.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "update", data }));
-      }
+      socket.emit("update", data);
     },
-    close() { ws?.close(); }
+    close() {
+      socket.disconnect();
+    }
   };
 }
 
 // Usage
-const sync = createSyncClient("ws://localhost:4000", (data) => {
+const sync = createSyncClient("http://localhost:4000", (data) => {
   document.getElementById("output").textContent = JSON.stringify(data, null, 2);
 });
 
@@ -826,9 +808,9 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
           </Section>
 
           {/* Protocol */}
-          <Section id="protocol" title="WebSocket Protocol">
+          <Section id="protocol" title="Socket.IO Events">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-              <p>Simple JSON messages over WebSocket:</p>
+              <p>Socket.IO events for communication:</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -836,15 +818,13 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                     Client → Server
                   </p>
                   <CodeBlock
-                    language="json"
-                    code={`{
-  "type": "update",
-  "data": {
-    "home": {
-      "hero": { "title": "Hello" }
-    }
+                    language="typescript"
+                    code={`// Event: "update"
+socket.emit("update", {
+  home: {
+    hero: { title: "Hello" }
   }
-}`}
+});`}
                   />
                   <p className="text-xs mt-2">
                     Sent when the user edits content locally, or on first
@@ -856,15 +836,15 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                     Server → Client
                   </p>
                   <CodeBlock
-                    language="json"
-                    code={`{
-  "type": "sync",
-  "data": {
-    "home": {
-      "hero": { "title": "Hello" }
-    }
-  }
-}`}
+                    language="typescript"
+                    code={`// Event: "sync"
+socket.on("sync", (data) => {
+  // data = {
+  //   home: {
+  //     hero: { title: "Hello" }
+  //   }
+  // }
+});`}
                   />
                   <p className="text-xs mt-2">
                     Broadcast when another client pushes an update, or sent to a
@@ -879,14 +859,14 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                 </p>
                 <ol className="text-xs space-y-1 list-decimal list-inside">
                   <li>
-                    Client A edits JSON → sends{" "}
-                    <code className="bg-muted px-1 rounded">update</code> to
-                    server
+                    Client A edits JSON → emits{" "}
+                    <code className="bg-muted px-1 rounded">update</code> event
+                    to server
                   </li>
                   <li>Server stores data in memory</li>
                   <li>
-                    Server sends{" "}
-                    <code className="bg-muted px-1 rounded">sync</code> to
+                    Server broadcasts{" "}
+                    <code className="bg-muted px-1 rounded">sync</code> event to
                     Client B, C, D…
                   </li>
                   <li>Each client updates its local state & localStorage</li>
@@ -925,7 +905,7 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                     <tr className="border-b border-border">
                       <td className="px-4 py-2">Client URL</td>
                       <td className="px-4 py-2 font-mono">
-                        ws://localhost:4000
+                        http://localhost:4000
                       </td>
                       <td className="px-4 py-2">
                         Header URL input or{" "}
@@ -940,9 +920,9 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                       <td className="px-4 py-2 font-mono">3000ms</td>
                       <td className="px-4 py-2">
                         <code className="bg-muted px-1 rounded">
-                          RECONNECT_DELAY
+                          reconnectionDelay
                         </code>{" "}
-                        in useWebSocket.ts
+                        option in useWebSocket.ts
                       </td>
                     </tr>
                     <tr>
@@ -968,7 +948,7 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
                 Copy and paste this prompt into ChatGPT, Claude, Copilot, or any
-                AI assistant to have it integrate the Jsonify WebSocket sync
+                AI assistant to have it integrate the Jsonify Socket.IO sync
                 into your existing website:
               </p>
 
@@ -980,7 +960,7 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                   <li>Copy the prompt below</li>
                   <li>Paste it into your AI assistant</li>
                   <li>
-                    Replace the placeholder values (your WebSocket URL, data
+                    Replace the placeholder values (your Socket.IO URL, data
                     structure, etc.)
                   </li>
                   <li>
@@ -996,21 +976,21 @@ document.querySelector("p").textContent = data.home.hero.subtitle;`}
                 </p>
                 <CodeBlock
                   language="text"
-                  code={`I need to integrate a WebSocket-based real-time JSON sync into my website. Here are the details:
+                  code={`I need to integrate a Socket.IO-based real-time JSON sync into my website. Here are the details:
 
-WebSocket Server:
-- The server runs on ws://localhost:4000 (configurable via WS_PORT env variable)
-- It accepts JSON messages and broadcasts changes to all connected clients
-- Protocol uses two message types:
-  1. Client → Server: { "type": "update", "data": <full JSON object> }
-  2. Server → Client: { "type": "sync", "data": <full JSON object> }
+Socket.IO Server:
+- The server runs on http://localhost:4000 (configurable via WS_PORT env variable)
+- It uses Socket.IO events to broadcast changes to all connected clients
+- Events:
+  1. Client → Server: socket.emit("update", data)
+  2. Server → Client: socket.on("sync", callback)
 
 Behavior:
-- When a client connects, the server sends the current state via a "sync" message
-- When a client sends an "update" message, the server stores it and broadcasts a "sync" to all OTHER clients
-- The client should auto-reconnect on disconnect (retry every 3 seconds)
-- Local changes should be sent to the server immediately
-- Remote changes (received via "sync") should update the UI without triggering a send back
+- When a client connects, the server emits the current state via a "sync" event
+- When a client emits an "update" event, the server stores it and broadcasts "sync" to all OTHER clients
+- Socket.IO has built-in auto-reconnect (configure reconnectionDelay)
+- Local changes should be emitted to the server immediately
+- Remote changes (received via "sync") should update the UI without triggering an emit back
 
 My website uses: [YOUR FRAMEWORK: e.g. React, Vue, Next.js, Svelte, plain HTML/JS, etc.]
 My content data structure looks like:
@@ -1024,13 +1004,13 @@ My content data structure looks like:
 }]
 
 Please generate:
-1. A reusable WebSocket client module/hook for my framework
+1. A reusable Socket.IO client module/hook for my framework
 2. Integration code showing how to connect it to my existing components
 3. A connection status indicator (connected/connecting/disconnected)
-4. Auto-reconnect logic
+4. Auto-reconnect logic (built into Socket.IO)
 5. localStorage persistence as offline fallback
 
-The WebSocket server is already running. I just need the client-side code.`}
+The Socket.IO server is already running. I just need the client-side code.`}
                 />
               </div>
 
@@ -1040,16 +1020,16 @@ The WebSocket server is already running. I just need the client-side code.`}
                 </p>
                 <CodeBlock
                   language="text"
-                  code={`Add real-time WebSocket sync to my React app. Here's what I need:
+                  code={`Add real-time Socket.IO sync to my React app. Here's what I need:
 
 Create a useWebSocket hook that:
-- Connects to ws://localhost:4000
+- Connects to http://localhost:4000 using socket.io-client
 - Takes two parameters: (data: any, onRemoteUpdate: (data: any) => void)
 - Returns: { status: "disconnected" | "connecting" | "connected", wsUrl: string, setWsUrl, connect, disconnect }
-- Sends { type: "update", data } to the server whenever \`data\` changes
-- Listens for { type: "sync", data } messages and calls onRemoteUpdate
+- Emits "update" event with data whenever \`data\` changes
+- Listens for "sync" events and calls onRemoteUpdate
 - Uses a ref flag to prevent echoing remote updates back to the server
-- Auto-reconnects every 3 seconds on disconnect
+- Uses Socket.IO built-in auto-reconnect (reconnectionDelay: 3000)
 - Cleans up on unmount
 
 Then show me how to use it in my component:
@@ -1076,16 +1056,16 @@ My data structure is:
                 </p>
                 <CodeBlock
                   language="text"
-                  code={`Add real-time WebSocket sync to my Vue/Nuxt app.
+                  code={`Add real-time Socket.IO sync to my Vue/Nuxt app.
 
 Create a composable useWebSocket that:
-- Connects to ws://localhost:4000  
+- Connects to http://localhost:4000 using socket.io-client
 - Accepts a reactive data ref and an onRemoteUpdate callback
 - Returns reactive status, wsUrl, connect(), disconnect()
-- Watches the data ref and sends { type: "update", data } on changes
-- Listens for { type: "sync", data } and calls onRemoteUpdate
-- Skips sending when the change came from a remote sync (use a flag)
-- Auto-reconnects every 3 seconds
+- Watches the data ref and emits "update" event on changes
+- Listens for "sync" events and calls onRemoteUpdate
+- Skips emitting when the change came from a remote sync (use a flag)
+- Uses Socket.IO built-in auto-reconnect
 - Cleans up on onUnmounted
 
 Show integration in a component with:
@@ -1104,18 +1084,18 @@ My data structure is:
                 </p>
                 <CodeBlock
                   language="text"
-                  code={`Add real-time WebSocket sync to my static HTML website.
+                  code={`Add real-time Socket.IO sync to my static HTML website.
 
 Create a JavaScript module that:
-- Connects to ws://localhost:4000
+- Connects to http://localhost:4000 using socket.io-client
 - Provides: connect(url), disconnect(), push(data), onData(callback)
-- Auto-reconnects every 3 seconds on disconnect
-- Sends { type: "update", data } when push() is called
-- Calls the onData callback when a { type: "sync", data } message arrives
+- Uses Socket.IO built-in auto-reconnect
+- Emits "update" event when push() is called
+- Calls the onData callback when a "sync" event arrives
 - Tracks connection status: "disconnected" | "connecting" | "connected"
 
 Show me:
-1. The sync module (plain ES6, no build tools required)
+1. The sync module using socket.io-client (can use CDN)
 2. HTML with a status dot, URL input, and connect button
 3. How to bind it to DOM elements (e.g., update an h1 and p tag from the JSON)
 4. How to push changes from a form/input back to the server
@@ -1153,9 +1133,10 @@ My content JSON looks like:
                 {
                   q: "Connection fails (status stays gray)",
                   a: [
-                    "Ensure the WebSocket server is running: npm run ws:server",
-                    "Check the URL matches (default ws://localhost:4000)",
+                    "Ensure the Socket.IO server is running: npm run ws:server",
+                    "Check the URL matches (default http://localhost:4000)",
                     "Verify the port isn't blocked by a firewall",
+                    "Check browser console for CORS errors",
                   ],
                 },
                 {
@@ -1169,7 +1150,7 @@ My content JSON looks like:
                   q: "Changes not syncing between tabs",
                   a: [
                     "Both tabs must show a green status dot",
-                    "Open browser DevTools console — look for [ws] log messages",
+                    "Open browser DevTools console — look for [socket.io] log messages",
                     "Ensure both tabs are connected to the same server URL",
                   ],
                 },

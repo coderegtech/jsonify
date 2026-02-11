@@ -8,6 +8,7 @@ import { StorageConfig, uploadFileToStorage } from "@/lib/storage-config";
 import {
   ChevronDown,
   ChevronRight,
+  Files,
   Loader2,
   Plus,
   Trash2,
@@ -94,7 +95,7 @@ export function JsonNode({
     if (newType === "file") {
       onUpdate(path, "");
       // Trigger file picker
-      setTimeout(() => fileInputRef.current?.click(), 100);
+      // setTimeout(() => fileInputRef.current?.click(), 100);
       return;
     }
     onUpdate(path, createDefaultValue(newType));
@@ -134,6 +135,15 @@ export function JsonNode({
     setAddingField(false);
     setNewFieldKey("");
     setNewFieldType("string");
+  };
+
+  const handleDuplicateColumn = () => {
+    if (!isExpandable) return;
+    const newKey =
+      type === "array"
+        ? String((value as JsonValue[]).length)
+        : `${keyName}_copy`;
+    onAdd(path, newKey, value);
   };
 
   const matches = matchesSearch(String(keyName), value, searchQuery);
@@ -297,6 +307,16 @@ export function JsonNode({
             <option value="array">array</option>
             <option value="file">file</option>
           </select>
+
+          {isExpandable && (
+            <button
+              className="p-1 rounded hover:bg-primary/20 text-primary transition-colors"
+              onClick={() => handleDuplicateColumn()}
+              title="Duplicate Column"
+            >
+              <Files className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {isExpandable && (
             <button

@@ -8,6 +8,7 @@ import {
   HardDrive,
   Key,
   Send,
+  Trash,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,16 +17,20 @@ interface ExportPanelProps {
   data: JsonValue;
   storageConfig: StorageConfig;
   onStorageConfigChange: (config: StorageConfig) => void;
+  onLoadData?: (data: JsonValue) => void;
+  clearData?: () => void;
 }
 
 export function ExportPanel({
   data,
   storageConfig,
   onStorageConfigChange,
+  onLoadData,
+  clearData,
 }: ExportPanelProps) {
-  const [apiUrl, setApiUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [method, setMethod] = useState<"POST" | "PUT">("POST");
+  const [apiUrl, setApiUrl] = useState(localStorage.getItem("apiUrl") || "");
+  const [apiKey, setApiKey] = useState(localStorage.getItem("apiKey") || "");
+  const [method, setMethod] = useState<"GET" | "POST" | "PUT">("GET");
   const [sending, setSending] = useState(false);
   const [showApiPanel, setShowApiPanel] = useState(false);
   const [showStoragePanel, setShowStoragePanel] = useState(false);
@@ -53,21 +58,43 @@ export function ExportPanel({
       toast.error("Please enter an API endpoint URL");
       return;
     }
+    localStorage.setItem("apiUrl", apiUrl);
+    localStorage.setItem("apiKey", apiKey);
     setSending(true);
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
+      const headers: Record<string, string> = {};
+      if (method !== "GET") {
+        headers["Content-Type"] = "application/json";
+      }
       if (apiKey.trim()) {
         headers["X-API-Key"] = `${apiKey}`;
       }
-      const res = await fetch(apiUrl, {
+
+      const fetchOptions: RequestInit = {
         method,
         headers,
-        body: jsonString,
-      });
+      };
+
+      // Only include body for POST/PUT requests
+      if (method !== "GET") {
+        fetchOptions.body = jsonString;
+      }
+
+      const res = await fetch(apiUrl, fetchOptions);
+
       if (res.ok) {
-        toast.success(`${method} successful (${res.status})`);
+        if (method === "GET") {
+          // Fetch data from API and load into editor
+          const responseData = await res.json();
+          if (onLoadData) {
+            onLoadData(responseData);
+            toast.success("JSON data loaded from API");
+          } else {
+            toast.error("Cannot load data: onLoadData callback not provided");
+          }
+        } else {
+          toast.success(`${method} successful (${res.status})`);
+        }
       } else {
         toast.error(`Request failed: ${res.status} ${res.statusText}`);
       }
@@ -79,7 +106,7 @@ export function ExportPanel({
 
   return (
     <div className="p-3 border-t border-border space-y-2">
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="w-full flex items-center gap-2 flex-wrap">
         <button
           className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded hover:bg-primary/90 transition-colors"
           onClick={handleDownload}
@@ -122,6 +149,16 @@ export function ExportPanel({
           <HardDrive className="w-3.5 h-3.5" />
           File Storage
         </button>
+
+        <div className="flex-1"></div>
+
+        <button
+          className="self-end flex items-center gap-1.5 text-xs bg-red-500 text-foreground px-3 py-1.5 rounded hover:bg-red-600 transition-colors"
+          onClick={clearData}
+        >
+          <Trash className="w-3.5 h-3.5" />
+          Reset
+        </button>
       </div>
 
       {showApiPanel && (
@@ -130,9 +167,12 @@ export function ExportPanel({
             <select
               className="bg-input border border-border rounded text-xs px-2 py-1 focus:outline-none"
               value={method}
-              onChange={(e) => setMethod(e.target.value as "POST" | "PUT")}
+              onChange={(e) =>
+                setMethod(e.target.value as "GET" | "POST" | "PUT")
+              }
             >
-              {/* <option value="POST" >POST</option> */}
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
               <option value="PUT">PUT</option>
             </select>
             <div className="flex items-center gap-1 flex-1 bg-input border border-border rounded px-2 py-1">
@@ -160,7 +200,13 @@ export function ExportPanel({
             onClick={handleSend}
             disabled={sending}
           >
-            {sending ? "Sending..." : "Send"}
+            {sending
+              ? method === "GET"
+                ? "Fetching..."
+                : "Sending..."
+              : method === "GET"
+                ? "Fetch"
+                : "Send"}
           </button>
         </div>
       )}

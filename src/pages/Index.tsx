@@ -32,8 +32,11 @@ const Index = () => {
   const ws = useWebSocket(editor.data, handleRemoteUpdate);
   const [rightTab, setRightTab] = useState<RightTab>("preview");
   const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [storageConfig, setStorageConfig] =
-    useState<StorageConfig>(defaultStorageConfig);
+  const [storageConfig, setStorageConfig] = useState<StorageConfig>(
+    localStorage.getItem("storageConfig")
+      ? JSON.parse(localStorage.getItem("storageConfig")!)
+      : defaultStorageConfig,
+  );
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -143,6 +146,8 @@ const Index = () => {
             data={editor.data}
             storageConfig={storageConfig}
             onStorageConfigChange={setStorageConfig}
+            onLoadData={editor.setData}
+            clearData={() => editor.setData({})}
           />
         </div>
 
