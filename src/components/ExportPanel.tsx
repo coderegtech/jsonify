@@ -1,25 +1,30 @@
 import { useState } from "react";
 import { JsonValue } from "@/hooks/useJsonEditor";
+import { StorageConfig } from "@/lib/storage-config";
 import {
   Download,
   Copy,
   Send,
-  Check,
   Key,
   Globe,
+  HardDrive,
+  Database,
 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ExportPanelProps {
   data: JsonValue;
+  storageConfig: StorageConfig;
+  onStorageConfigChange: (config: StorageConfig) => void;
 }
 
-export function ExportPanel({ data }: ExportPanelProps) {
+export function ExportPanel({ data, storageConfig, onStorageConfigChange }: ExportPanelProps) {
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [method, setMethod] = useState<"POST" | "PUT">("POST");
   const [sending, setSending] = useState(false);
   const [showApiPanel, setShowApiPanel] = useState(false);
+  const [showStoragePanel, setShowStoragePanel] = useState(false);
 
   const jsonString = JSON.stringify(data, null, 2);
 
@@ -70,7 +75,7 @@ export function ExportPanel({ data }: ExportPanelProps) {
 
   return (
     <div className="p-3 border-t border-border space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded hover:bg-primary/90 transition-colors"
           onClick={handleDownload}
@@ -91,10 +96,21 @@ export function ExportPanel({ data }: ExportPanelProps) {
               ? "bg-accent text-accent-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           }`}
-          onClick={() => setShowApiPanel(!showApiPanel)}
+          onClick={() => { setShowApiPanel(!showApiPanel); setShowStoragePanel(false); }}
         >
           <Send className="w-3.5 h-3.5" />
           API Sync
+        </button>
+        <button
+          className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded transition-colors ${
+            showStoragePanel
+              ? "bg-accent text-accent-foreground"
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          }`}
+          onClick={() => { setShowStoragePanel(!showStoragePanel); setShowApiPanel(false); }}
+        >
+          <HardDrive className="w-3.5 h-3.5" />
+          File Storage
         </button>
       </div>
 
@@ -136,6 +152,57 @@ export function ExportPanel({ data }: ExportPanelProps) {
           >
             {sending ? "Sending..." : "Send"}
           </button>
+        </div>
+      )}
+
+      {showStoragePanel && (
+        <div className="space-y-2 p-3 bg-card rounded-md border border-border">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Database className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-medium text-foreground">File Storage API</span>
+          </div>
+          <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
+            <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <input
+              className="bg-transparent text-xs w-full focus:outline-none font-mono"
+              placeholder="https://looks.flexiapi.fun"
+              value={storageConfig.apiUrl}
+              onChange={(e) => onStorageConfigChange({ ...storageConfig, apiUrl: e.target.value })}
+            />
+          </div>
+          <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
+            <Key className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <input
+              type="password"
+              className="bg-transparent text-xs w-full focus:outline-none font-mono"
+              placeholder="Storage API Key"
+              value={storageConfig.apiKey}
+              onChange={(e) => onStorageConfigChange({ ...storageConfig, apiKey: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
+              <HardDrive className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <input
+                className="bg-transparent text-xs w-full focus:outline-none font-mono"
+                placeholder="Bucket name"
+                value={storageConfig.bucket}
+                onChange={(e) => onStorageConfigChange({ ...storageConfig, bucket: e.target.value })}
+              />
+            </div>
+            <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
+              <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <input
+                className="bg-transparent text-xs w-full focus:outline-none font-mono"
+                placeholder="Public URL (optional)"
+                value={storageConfig.publicUrl}
+                onChange={(e) => onStorageConfigChange({ ...storageConfig, publicUrl: e.target.value })}
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Configure storage API to enable file uploads in the JSON editor. Files are uploaded via POST to <code className="bg-muted px-1 rounded">/api/v1/store</code>.
+          </p>
         </div>
       )}
     </div>

@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { JsonValue } from "@/hooks/useJsonEditor";
 import { getValueType, createDefaultValue, matchesSearch } from "@/lib/json-utils";
+import { StorageConfig, uploadFileToStorage } from "@/lib/storage-config";
 import {
   ChevronRight,
   ChevronDown,
   Trash2,
   Plus,
-  GripVertical,
+  Upload,
+  Image,
+  X,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface JsonNodeProps {
   keyName: string | number;
@@ -20,6 +25,7 @@ interface JsonNodeProps {
   searchQuery: string;
   depth?: number;
   isArrayItem?: boolean;
+  storageConfig?: StorageConfig;
 }
 
 export function JsonNode({
@@ -33,6 +39,7 @@ export function JsonNode({
   searchQuery,
   depth = 0,
   isArrayItem = false,
+  storageConfig,
 }: JsonNodeProps) {
   const [expanded, setExpanded] = useState(depth < 2);
   const [editingKey, setEditingKey] = useState(false);
@@ -40,6 +47,9 @@ export function JsonNode({
   const [addingField, setAddingField] = useState(false);
   const [newFieldKey, setNewFieldKey] = useState("");
   const [newFieldType, setNewFieldType] = useState("string");
+  const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const type = getValueType(value);
   const isExpandable = type === "object" || type === "array";
@@ -48,6 +58,20 @@ export function JsonNode({
       ? (value as JsonValue[]).map((v, i) => [i, v] as const)
       : Object.entries(value as Record<string, JsonValue>)
     : [];
+
+  // Detect if this string value looks like an image URL
+  const isFileValue =
+    type === "string" &&
+    typeof value === "string" &&
+    value.length > 0 &&
+    (/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico|avif)(\?.*)?$/i.test(value) ||
+      /^https?:\/\/.+/i.test(value));
+
+  const isImageUrl =
+    type === "string" &&
+    typeof value === "string" &&
+    value.length > 0 &&
+    /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico|avif)(\?.*)?$/i.test(value);
 
   const handleValueChange = (newVal: string) => {
     let parsed: JsonValue;
@@ -64,7 +88,32 @@ export function JsonNode({
   };
 
   const handleTypeChange = (newType: string) => {
+    if (newType === "file") {
+      onUpdate(path, "");
+      // Trigger file picker
+      setTimeout(() => fileInputRef.current?.click(), 100);
+      return;
+    }
     onUpdate(path, createDefaultValue(newType));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!storageConfig || !storageConfig.apiUrl.trim()) {
+      toast.error("Please configure File Storage API first (in Export panel)");
+      return;
+    }
+    setUploading(true);
+    const result = await uploadFileToStorage(file, storageConfig);
+    if (result.success) {
+      onUpdate(path, result.url);
+      toast.success("File uploaded successfully");
+    } else {
+      toast.error((result as { success: false; error: string }).error);
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleKeySubmit = () => {
@@ -103,6 +152,15 @@ export function JsonNode({
 
   return (
     <div className="group/node">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*,application/pdf,.doc,.docx,.txt"
+        onChange={handleFileUpload}
+      />
+
       <div
         className="flex items-center gap-1 py-1 px-2 rounded-md hover:bg-accent/50 transition-colors"
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
@@ -151,9 +209,9 @@ export function JsonNode({
 
         {/* Type badge */}
         <span
-          className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${typeColors[type]}`}
+          className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${typeColors[type] || "bg-muted text-muted-foreground"}`}
         >
-          {type}
+          {isImageUrl ? "file" : type}
           {type === "array" && `[${(value as JsonValue[]).length}]`}
           {type === "object" &&
             `{${Object.keys(value as Record<string, JsonValue>).length}}`}
@@ -161,7 +219,7 @@ export function JsonNode({
 
         {/* Value editor */}
         {!isExpandable && (
-          <div className="flex-1 ml-2">
+          <div className="flex-1 ml-2 flex items-center gap-1.5">
             {type === "boolean" ? (
               <button
                 className={`text-sm font-mono px-2 py-0.5 rounded ${
@@ -176,11 +234,42 @@ export function JsonNode({
                 null
               </span>
             ) : (
-              <input
-                className="bg-input border border-border rounded px-2 py-0.5 text-sm font-mono text-foreground w-full max-w-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                value={String(value)}
-                onChange={(e) => handleValueChange(e.target.value)}
-              />
+              <>
+                <input
+                  className="bg-input border border-border rounded px-2 py-0.5 text-sm font-mono text-foreground w-full max-w-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                  value={String(value)}
+                  onChange={(e) => handleValueChange(e.target.value)}
+                />
+                {/* Image preview thumbnail */}
+                {isImageUrl && (
+                  <button
+                    className="shrink-0 rounded border border-border overflow-hidden hover:ring-2 hover:ring-primary transition-all"
+                    onClick={() => setPreviewOpen(true)}
+                    title="Preview image"
+                  >
+                    <img
+                      src={value as string}
+                      alt="preview"
+                      className="w-7 h-7 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </button>
+                )}
+                {/* Upload button */}
+                {uploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground shrink-0" />
+                ) : (
+                  <button
+                    className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Upload file"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
@@ -190,7 +279,7 @@ export function JsonNode({
           {/* Type changer */}
           <select
             className="bg-input border border-border rounded text-[10px] px-1 py-0.5 text-muted-foreground focus:outline-none"
-            value={type}
+            value={isImageUrl ? "file" : type}
             onChange={(e) => handleTypeChange(e.target.value)}
           >
             <option value="string">string</option>
@@ -199,6 +288,7 @@ export function JsonNode({
             <option value="null">null</option>
             <option value="object">object</option>
             <option value="array">array</option>
+            <option value="file">file</option>
           </select>
 
           {isExpandable && (
@@ -223,6 +313,31 @@ export function JsonNode({
         </div>
       </div>
 
+      {/* Full image preview overlay */}
+      {previewOpen && isImageUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-8"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div className="relative max-w-3xl max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="absolute -top-3 -right-3 p-1 bg-card rounded-full border border-border hover:bg-accent transition-colors z-10"
+              onClick={() => setPreviewOpen(false)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <img
+              src={value as string}
+              alt="Full preview"
+              className="max-w-full max-h-[80vh] rounded-lg border border-border object-contain"
+            />
+            <p className="text-xs text-muted-foreground mt-2 truncate font-mono">
+              {value as string}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Children */}
       {isExpandable && expanded && (
         <div>
@@ -239,6 +354,7 @@ export function JsonNode({
               searchQuery={searchQuery}
               depth={depth + 1}
               isArrayItem={type === "array"}
+              storageConfig={storageConfig}
             />
           ))}
 
@@ -269,6 +385,7 @@ export function JsonNode({
                 <option value="null">null</option>
                 <option value="object">object</option>
                 <option value="array">array</option>
+                <option value="file">file</option>
               </select>
               <button
                 className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded hover:bg-primary/90 transition-colors"
