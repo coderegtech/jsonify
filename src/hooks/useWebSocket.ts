@@ -4,7 +4,7 @@ import { JsonValue } from "./useJsonEditor";
 
 type WsStatus = "disconnected" | "connecting" | "connected";
 
-const DEFAULT_WS_URL = "http://localhost:4000";
+const DEFAULT_WS_URL = process.env.WS_URL || "http://localhost:4000";
 
 export function useWebSocket(
   data: JsonValue,
