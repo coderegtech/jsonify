@@ -14,7 +14,7 @@ export const defaultStorageConfig: StorageConfig = {
 
 export async function uploadFileToStorage(
   file: File,
-  config: StorageConfig
+  config: StorageConfig,
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   if (!config.apiUrl.trim()) {
     return { success: false, error: "Storage API URL is not configured" };
@@ -35,14 +35,17 @@ export async function uploadFileToStorage(
     const res = await fetch(storeUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${config.apiKey}`,
+        Authorization: `${config.apiKey}`,
       },
       body: formData,
     });
 
     if (!res.ok) {
       const text = await res.text();
-      return { success: false, error: `Upload failed (${res.status}): ${text}` };
+      return {
+        success: false,
+        error: `Upload failed (${res.status}): ${text}`,
+      };
     }
 
     const data = await res.json();
@@ -54,11 +57,16 @@ export async function uploadFileToStorage(
       (data.id && config.publicUrl
         ? `${config.publicUrl.replace(/\/$/, "")}/${data.id}`
         : null) ||
-      (data.data?.url) ||
-      (data.data?.file_url);
+      data.data?.url ||
+      data.data?.file_url;
 
     if (!fileUrl) {
-      return { success: false, error: "Upload succeeded but no URL returned. Response: " + JSON.stringify(data) };
+      return {
+        success: false,
+        error:
+          "Upload succeeded but no URL returned. Response: " +
+          JSON.stringify(data),
+      };
     }
 
     return { success: true, url: fileUrl };

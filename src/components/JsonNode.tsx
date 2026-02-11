@@ -1,17 +1,20 @@
-import { useState, useRef } from "react";
 import { JsonValue } from "@/hooks/useJsonEditor";
-import { getValueType, createDefaultValue, matchesSearch } from "@/lib/json-utils";
+import {
+  createDefaultValue,
+  getValueType,
+  matchesSearch,
+} from "@/lib/json-utils";
 import { StorageConfig, uploadFileToStorage } from "@/lib/storage-config";
 import {
-  ChevronRight,
   ChevronDown,
-  Trash2,
-  Plus,
-  Upload,
-  Image,
-  X,
+  ChevronRight,
   Loader2,
+  Plus,
+  Trash2,
+  Upload,
+  X,
 } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface JsonNodeProps {
@@ -124,7 +127,8 @@ export function JsonNode({
   };
 
   const handleAddField = () => {
-    const key = type === "array" ? String((value as JsonValue[]).length) : newFieldKey;
+    const key =
+      type === "array" ? String((value as JsonValue[]).length) : newFieldKey;
     if (type !== "array" && !key.trim()) return;
     onAdd(path, key, createDefaultValue(newFieldType));
     setAddingField(false);
@@ -133,9 +137,10 @@ export function JsonNode({
   };
 
   const matches = matchesSearch(String(keyName), value, searchQuery);
-  const hasChildMatch = isExpandable && searchQuery
-    ? childEntries.some(([k, v]) => matchesSearch(String(k), v, searchQuery))
-    : false;
+  const hasChildMatch =
+    isExpandable && searchQuery
+      ? childEntries.some(([k, v]) => matchesSearch(String(k), v, searchQuery))
+      : false;
 
   if (searchQuery && !matches && !hasChildMatch && !isExpandable) {
     return null;
@@ -223,7 +228,9 @@ export function JsonNode({
             {type === "boolean" ? (
               <button
                 className={`text-sm font-mono px-2 py-0.5 rounded ${
-                  value ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"
+                  value
+                    ? "bg-primary/20 text-primary"
+                    : "bg-destructive/20 text-destructive"
                 }`}
                 onClick={() => onUpdate(path, !value)}
               >
@@ -260,7 +267,7 @@ export function JsonNode({
                 {/* Upload button */}
                 {uploading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground shrink-0" />
-                ) : (
+                ) : isFileValue ? (
                   <button
                     className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors shrink-0"
                     onClick={() => fileInputRef.current?.click()}
@@ -268,7 +275,7 @@ export function JsonNode({
                   >
                     <Upload className="w-3.5 h-3.5" />
                   </button>
-                )}
+                ) : null}
               </>
             )}
           </div>
@@ -319,7 +326,10 @@ export function JsonNode({
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-8"
           onClick={() => setPreviewOpen(false)}
         >
-          <div className="relative max-w-3xl max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-3xl max-h-[80vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="absolute -top-3 -right-3 p-1 bg-card rounded-full border border-border hover:bg-accent transition-colors z-10"
               onClick={() => setPreviewOpen(false)}

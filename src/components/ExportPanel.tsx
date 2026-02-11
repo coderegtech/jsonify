@@ -1,15 +1,15 @@
-import { useState } from "react";
 import { JsonValue } from "@/hooks/useJsonEditor";
 import { StorageConfig } from "@/lib/storage-config";
 import {
-  Download,
   Copy,
-  Send,
-  Key,
+  Database,
+  Download,
   Globe,
   HardDrive,
-  Database,
+  Key,
+  Send,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 interface ExportPanelProps {
@@ -18,7 +18,11 @@ interface ExportPanelProps {
   onStorageConfigChange: (config: StorageConfig) => void;
 }
 
-export function ExportPanel({ data, storageConfig, onStorageConfigChange }: ExportPanelProps) {
+export function ExportPanel({
+  data,
+  storageConfig,
+  onStorageConfigChange,
+}: ExportPanelProps) {
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [method, setMethod] = useState<"POST" | "PUT">("POST");
@@ -55,7 +59,7 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
         "Content-Type": "application/json",
       };
       if (apiKey.trim()) {
-        headers["Authorization"] = `Bearer ${apiKey}`;
+        headers["X-API-Key"] = `${apiKey}`;
       }
       const res = await fetch(apiUrl, {
         method,
@@ -96,7 +100,10 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
               ? "bg-accent text-accent-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           }`}
-          onClick={() => { setShowApiPanel(!showApiPanel); setShowStoragePanel(false); }}
+          onClick={() => {
+            setShowApiPanel(!showApiPanel);
+            setShowStoragePanel(false);
+          }}
         >
           <Send className="w-3.5 h-3.5" />
           API Sync
@@ -107,7 +114,10 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
               ? "bg-accent text-accent-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           }`}
-          onClick={() => { setShowStoragePanel(!showStoragePanel); setShowApiPanel(false); }}
+          onClick={() => {
+            setShowStoragePanel(!showStoragePanel);
+            setShowApiPanel(false);
+          }}
         >
           <HardDrive className="w-3.5 h-3.5" />
           File Storage
@@ -122,14 +132,14 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
               value={method}
               onChange={(e) => setMethod(e.target.value as "POST" | "PUT")}
             >
-              <option value="POST">POST</option>
+              {/* <option value="POST" >POST</option> */}
               <option value="PUT">PUT</option>
             </select>
             <div className="flex items-center gap-1 flex-1 bg-input border border-border rounded px-2 py-1">
               <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <input
                 className="bg-transparent text-xs w-full focus:outline-none font-mono"
-                placeholder="https://api.example.com/content"
+                placeholder="https://integrations.fruitask.com/{table_name}/{token}/rows/{row_id}/cells/{column_id}"
                 value={apiUrl}
                 onChange={(e) => setApiUrl(e.target.value)}
               />
@@ -140,7 +150,7 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
             <input
               type="password"
               className="bg-transparent text-xs w-full focus:outline-none font-mono"
-              placeholder="Bearer token (optional)"
+              placeholder="API Token (optional)"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
             />
@@ -159,7 +169,9 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
         <div className="space-y-2 p-3 bg-card rounded-md border border-border">
           <div className="flex items-center gap-1.5 mb-1">
             <Database className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium text-foreground">File Storage API</span>
+            <span className="text-xs font-medium text-foreground">
+              File Storage API
+            </span>
           </div>
           <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
             <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -167,7 +179,12 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
               className="bg-transparent text-xs w-full focus:outline-none font-mono"
               placeholder="https://looks.flexiapi.fun"
               value={storageConfig.apiUrl}
-              onChange={(e) => onStorageConfigChange({ ...storageConfig, apiUrl: e.target.value })}
+              onChange={(e) =>
+                onStorageConfigChange({
+                  ...storageConfig,
+                  apiUrl: e.target.value,
+                })
+              }
             />
           </div>
           <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
@@ -177,7 +194,12 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
               className="bg-transparent text-xs w-full focus:outline-none font-mono"
               placeholder="Storage API Key"
               value={storageConfig.apiKey}
-              onChange={(e) => onStorageConfigChange({ ...storageConfig, apiKey: e.target.value })}
+              onChange={(e) =>
+                onStorageConfigChange({
+                  ...storageConfig,
+                  apiKey: e.target.value,
+                })
+              }
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -187,7 +209,12 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
                 className="bg-transparent text-xs w-full focus:outline-none font-mono"
                 placeholder="Bucket name"
                 value={storageConfig.bucket}
-                onChange={(e) => onStorageConfigChange({ ...storageConfig, bucket: e.target.value })}
+                onChange={(e) =>
+                  onStorageConfigChange({
+                    ...storageConfig,
+                    bucket: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
@@ -196,12 +223,19 @@ export function ExportPanel({ data, storageConfig, onStorageConfigChange }: Expo
                 className="bg-transparent text-xs w-full focus:outline-none font-mono"
                 placeholder="Public URL (optional)"
                 value={storageConfig.publicUrl}
-                onChange={(e) => onStorageConfigChange({ ...storageConfig, publicUrl: e.target.value })}
+                onChange={(e) =>
+                  onStorageConfigChange({
+                    ...storageConfig,
+                    publicUrl: e.target.value,
+                  })
+                }
               />
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Configure storage API to enable file uploads in the JSON editor. Files are uploaded via POST to <code className="bg-muted px-1 rounded">/api/v1/store</code>.
+            Configure storage API to enable file uploads in the JSON editor.
+            Files are uploaded via POST to{" "}
+            <code className="bg-muted px-1 rounded">/api/v1/store</code>.
           </p>
         </div>
       )}

@@ -1,26 +1,39 @@
-import { useState } from "react";
-import { useJsonEditor } from "@/hooks/useJsonEditor";
-import { JsonTreeEditor } from "@/components/JsonTreeEditor";
-import { JsonPreview } from "@/components/JsonPreview";
-import { WebsitePreview } from "@/components/WebsitePreview";
 import { ExportPanel } from "@/components/ExportPanel";
+import { JsonPreview } from "@/components/JsonPreview";
+import { JsonTreeEditor } from "@/components/JsonTreeEditor";
+import { WebsitePreview } from "@/components/WebsitePreview";
+import { useJsonEditor } from "@/hooks/useJsonEditor";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { StorageConfig, defaultStorageConfig } from "@/lib/storage-config";
 import {
+  BookOpen,
+  Braces,
   Code2,
   Eye,
   Globe,
   PanelLeftClose,
   PanelLeftOpen,
-  Braces,
+  Radio,
 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Link } from "react-router-dom";
 
 type RightTab = "preview" | "website";
 
 const Index = () => {
   const editor = useJsonEditor();
+  const { setData } = editor;
+  const handleRemoteUpdate = useCallback(
+    (data: import("@/hooks/useJsonEditor").JsonValue) => {
+      setData(data, false);
+    },
+    [setData],
+  );
+  const ws = useWebSocket(editor.data, handleRemoteUpdate);
   const [rightTab, setRightTab] = useState<RightTab>("preview");
   const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [storageConfig, setStorageConfig] = useState<StorageConfig>(defaultStorageConfig);
+  const [storageConfig, setStorageConfig] =
+    useState<StorageConfig>(defaultStorageConfig);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -29,15 +42,57 @@ const Index = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Braces className="w-5 h-5 text-primary" />
-            <h1 className="text-sm font-semibold tracking-tight">
-              CopyManager
-            </h1>
+            <h1 className="text-sm font-semibold tracking-tight">Jsonify</h1>
           </div>
           <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-            v1.0
+            v1.1.5
           </span>
+          <Link
+            to="/docs"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Docs
+          </Link>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {/* WebSocket Controls */}
+          <div className="flex items-center gap-1.5">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                ws.status === "connected"
+                  ? "bg-green-500"
+                  : ws.status === "connecting"
+                    ? "bg-yellow-500 animate-pulse"
+                    : "bg-muted-foreground/40"
+              }`}
+              title={`WebSocket: ${ws.status}`}
+            />
+            <input
+              className="bg-input border border-border rounded px-2 py-0.5 text-xs font-mono w-44 focus:outline-none focus:ring-1 focus:ring-ring"
+              value={ws.wsUrl}
+              onChange={(e) => ws.setWsUrl(e.target.value)}
+              placeholder="ws://localhost:4000"
+            />
+            {ws.status === "connected" ? (
+              <button
+                className="flex items-center gap-1 bg-destructive/15 text-destructive px-2 py-0.5 rounded hover:bg-destructive/25 transition-colors text-xs"
+                onClick={ws.disconnect}
+              >
+                <Radio className="w-3 h-3" />
+                Stop
+              </button>
+            ) : (
+              <button
+                className="flex items-center gap-1 bg-primary/15 text-primary px-2 py-0.5 rounded hover:bg-primary/25 transition-colors text-xs"
+                onClick={() => ws.connect(ws.wsUrl)}
+                disabled={ws.status === "connecting"}
+              >
+                <Radio className="w-3 h-3" />
+                {ws.status === "connecting" ? "Connecting..." : "Connect"}
+              </button>
+            )}
+          </div>
           <span className="bg-muted px-2 py-0.5 rounded font-mono">
             {editor.historyIndex + 1}/{editor.historyCount} snapshots
           </span>
@@ -49,7 +104,7 @@ const Index = () => {
         {/* Left Panel: JSON Tree Editor */}
         <div
           className={`flex flex-col border-r border-border bg-card transition-all duration-200 ${
-            leftCollapsed ? "w-0 overflow-hidden" : "w-1/2 min-w-[360px]"
+            leftCollapsed ? "w-0 overflow-hidden" : "max-w-2xl w-full"
           }`}
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-border">

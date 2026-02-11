@@ -1,14 +1,17 @@
+import { ExternalLink, Globe, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { Globe, RefreshCw, ExternalLink } from "lucide-react";
 
 export function WebsitePreview() {
-  const [url, setUrl] = useState("");
-  const [activeUrl, setActiveUrl] = useState("");
+  const [url, setUrl] = useState(localStorage.getItem("lastPreviewUrl") || "");
+  const [activeUrl, setActiveUrl] = useState(
+    localStorage.getItem("lastPreviewUrl") || "",
+  );
 
   const handleLoad = () => {
     let u = url.trim();
     if (u && !u.startsWith("http")) u = "https://" + u;
     setActiveUrl(u);
+    localStorage.setItem("lastPreviewUrl", u);
   };
 
   return (

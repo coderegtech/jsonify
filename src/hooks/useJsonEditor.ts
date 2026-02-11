@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 
 export type JsonValue =
   | string
@@ -69,7 +69,9 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const initialData: JsonValue = {
+const STORAGE_KEY = "copy-canvas-json-data";
+
+const defaultData: JsonValue = {
   home: {
     hero: {
       title: "Welcome to Our Platform",
@@ -90,7 +92,26 @@ const initialData: JsonValue = {
   },
 };
 
+function loadFromStorage(): JsonValue {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore corrupt data
+  }
+  return defaultData;
+}
+
+function saveToStorage(data: JsonValue): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore quota errors
+  }
+}
+
 export function useJsonEditor() {
+  const initialData = loadFromStorage();
   const initial: HistoryEntry = { data: initialData, timestamp: Date.now() };
   const [state, dispatch] = useReducer(reducer, {
     data: initialData,
@@ -98,6 +119,11 @@ export function useJsonEditor() {
     historyIndex: 0,
     searchQuery: "",
   });
+
+  // Persist to localStorage whenever data changes
+  useEffect(() => {
+    saveToStorage(state.data);
+  }, [state.data]);
 
   const setData = useCallback((data: JsonValue, pushHistory = true) => {
     dispatch({ type: "SET_DATA", payload: data, pushHistory });
@@ -117,7 +143,7 @@ export function useJsonEditor() {
   const redo = useCallback(() => dispatch({ type: "REDO" }), []);
   const setSearch = useCallback(
     (q: string) => dispatch({ type: "SET_SEARCH", payload: q }),
-    []
+    [],
   );
 
   const canUndo = state.historyIndex > 0;
@@ -133,7 +159,7 @@ export function useJsonEditor() {
       current[path[path.length - 1]] = value;
       setData(newData);
     },
-    [state.data, setData]
+    [state.data, setData],
   );
 
   const deletePath = useCallback(
@@ -152,7 +178,7 @@ export function useJsonEditor() {
       }
       setData(newData);
     },
-    [state.data, setData]
+    [state.data, setData],
   );
 
   const addField = useCallback(
@@ -169,7 +195,7 @@ export function useJsonEditor() {
       }
       setData(newData);
     },
-    [state.data, setData]
+    [state.data, setData],
   );
 
   const renamePath = useCallback(
@@ -188,7 +214,7 @@ export function useJsonEditor() {
       }
       setData(newData);
     },
-    [state.data, setData]
+    [state.data, setData],
   );
 
   return {
