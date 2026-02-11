@@ -1,5 +1,6 @@
 import { JsonValue } from "@/hooks/useJsonEditor";
 import { JsonNode } from "./JsonNode";
+import { StorageConfig } from "@/lib/storage-config";
 import {
   Search,
   Undo2,
@@ -25,6 +26,7 @@ interface JsonTreeEditorProps {
   canRedo: boolean;
   onLoadJson: (json: string) => { success: boolean; error?: string };
   onSetData: (data: JsonValue) => void;
+  storageConfig?: StorageConfig;
 }
 
 export function JsonTreeEditor({
@@ -41,6 +43,7 @@ export function JsonTreeEditor({
   canRedo,
   onLoadJson,
   onSetData,
+  storageConfig,
 }: JsonTreeEditorProps) {
   const [importMode, setImportMode] = useState<
     null | "paste" | "url" | "file"
@@ -222,6 +225,7 @@ export function JsonTreeEditor({
             searchQuery={searchQuery}
             depth={0}
             isArrayItem={Array.isArray(data)}
+            storageConfig={storageConfig}
           />
         ))}
 

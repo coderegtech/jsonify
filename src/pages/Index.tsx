@@ -4,6 +4,7 @@ import { JsonTreeEditor } from "@/components/JsonTreeEditor";
 import { JsonPreview } from "@/components/JsonPreview";
 import { WebsitePreview } from "@/components/WebsitePreview";
 import { ExportPanel } from "@/components/ExportPanel";
+import { StorageConfig, defaultStorageConfig } from "@/lib/storage-config";
 import {
   Code2,
   Eye,
@@ -19,6 +20,7 @@ const Index = () => {
   const editor = useJsonEditor();
   const [rightTab, setRightTab] = useState<RightTab>("preview");
   const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [storageConfig, setStorageConfig] = useState<StorageConfig>(defaultStorageConfig);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -79,9 +81,14 @@ const Index = () => {
               canRedo={editor.canRedo}
               onLoadJson={editor.loadJson}
               onSetData={editor.setData}
+              storageConfig={storageConfig}
             />
           </div>
-          <ExportPanel data={editor.data} />
+          <ExportPanel
+            data={editor.data}
+            storageConfig={storageConfig}
+            onStorageConfigChange={setStorageConfig}
+          />
         </div>
 
         {/* Collapsed toggle */}
