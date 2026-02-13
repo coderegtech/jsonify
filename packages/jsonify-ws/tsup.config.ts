@@ -6,7 +6,7 @@ export default defineConfig([
     format: ["cjs", "esm"],
     dts: true,
     sourcemap: true,
-    external: ["react", "socket.io-client"],
+    external: ["react", "react-dom", "socket.io-client"],
     clean: true,
   },
   {

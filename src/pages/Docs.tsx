@@ -63,9 +63,12 @@ function Section({
 const tocItems = [
   { id: "overview", label: "Overview" },
   { id: "quick-start", label: "Quick Start" },
+  { id: "npm-package", label: "NPM Package" },
+  { id: "use-jsonify", label: "useJsonify() Hook" },
+  { id: "data-copy", label: "data-copy Attributes" },
   { id: "server-setup", label: "Server Setup" },
   { id: "client-integration", label: "Client Integration" },
-  { id: "react-hook", label: "React Hook API" },
+  { id: "react-hook", label: "useJsonifyWs Hook" },
   { id: "vanilla-js", label: "Vanilla JS / Any Framework" },
   { id: "protocol", label: "Socket.IO Events" },
   { id: "config", label: "Configuration" },
@@ -270,7 +273,332 @@ const Docs = () => {
             </div>
           </Section>
 
-          {/* Server Setup */}
+          {/* NPM Package */}
+          <Section id="npm-package" title="NPM Package">
+            <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                Install the <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">jsonify-ws</code> npm
+                package to add real-time JSON sync and <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">data-copy</code> content editing to any React app.
+              </p>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Install</p>
+                <CodeBlock code={`npm install jsonify-ws socket.io-client`} />
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Environment Variable</p>
+                <CodeBlock language="env" code={`# .env (Vite)
+VITE_WSL_URL=http://localhost:4000
+
+# .env (CRA / Next.js)
+REACT_APP_WSL_URL=http://localhost:4000
+
+# Fallback
+WSL_URL=http://localhost:4000`} />
+                <p className="mt-2 text-xs">
+                  If not set, defaults to <code className="bg-muted px-1 rounded font-mono text-[11px]">http://localhost:4000</code>.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">useJsonify()</p>
+                  <p className="text-xs text-muted-foreground">
+                    Full-featured hook with WebSocket sync + <code className="bg-muted px-1 rounded text-[11px]">data-copy</code> contentEditable
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">useJsonifyWs()</p>
+                  <p className="text-xs text-muted-foreground">
+                    Lower-level hook — WebSocket sync only (no data-copy support)
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* useJsonify Hook */}
+          <Section id="use-jsonify" title="useJsonify() Hook">
+            <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                The primary hook — combines WebSocket sync with{" "}
+                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">data-copy</code> attribute
+                scanning and contentEditable mode.
+              </p>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Basic usage</p>
+                <CodeBlock
+                  language="tsx"
+                  code={`import { useJsonify } from "jsonify-ws";
+
+function App() {
+  const j = useJsonify({
+    autoConnect: true,
+    initialData: {
+      home: { title: "Hello World", subtitle: "Edit me!" }
+    },
+  });
+
+  return (
+    <div>
+      <p>Status: {j.status}</p>
+
+      {/* Toggle edit mode — makes data-copy elements editable */}
+      <button onClick={j.toggleEditMode}>
+        {j.editMode ? "✅ Editing" : "✏️ Edit Mode"}
+      </button>
+
+      {/* Elements with data-copy become contentEditable in edit mode */}
+      <h1 data-copy="home.title">{j.data.home?.title}</h1>
+      <p data-copy="home.subtitle">{j.data.home?.subtitle}</p>
+
+      {/* Direct data manipulation */}
+      <button onClick={() => j.setPath("home.title", "Updated!")}>
+        Update Title
+      </button>
+    </div>
+  );
+}`}
+                />
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Options</p>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Option</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Type</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Default</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      {[
+                        ["url", "string", "WSL_URL env", "WebSocket server URL"],
+                        ["autoConnect", "boolean", "false", "Connect on mount"],
+                        ["initialData", "Record<string, JsonValue>", "{}", "Initial JSON state"],
+                        ["reconnectionDelay", "number", "3000", "Reconnection delay (ms)"],
+                        ["onSync", "(data) => void", "—", "Callback on remote data received"],
+                        ["onStatusChange", "(status) => void", "—", "Callback on status change"],
+                        ["onError", "(error) => void", "—", "Callback on error"],
+                        ["targetDocument", "Document", "window.document", "Target for data-copy scan"],
+                        ["injectToggle", "boolean", "true", "Auto-inject floating edit button"],
+                      ].map(([name, type, def, desc]) => (
+                        <tr key={name} className="border-b border-border">
+                          <td className="px-4 py-2 font-mono">{name}</td>
+                          <td className="px-4 py-2 font-mono text-[11px]">{type}</td>
+                          <td className="px-4 py-2 font-mono text-[11px]">{def}</td>
+                          <td className="px-4 py-2">{desc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Return values</p>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Property</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Type</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      {[
+                        ["data", "Record<string, JsonValue>", "Current synced JSON data"],
+                        ["setData", "(data) => void", "Update all data (broadcasts)"],
+                        ["setPath", "(path, value) => void", "Update a single dot-path"],
+                        ["status", "WsStatus", "Connection status"],
+                        ["connect", "(url?) => void", "Connect to server"],
+                        ["disconnect", "() => void", "Disconnect from server"],
+                        ["url", "string", "Resolved WebSocket URL"],
+                        ["editMode", "boolean", "Whether edit mode is active"],
+                        ["toggleEditMode", "() => void", "Toggle edit mode on/off"],
+                        ["setEditMode", "(active) => void", "Set edit mode explicitly"],
+                        ["elements", "DataCopyElement[]", "Scanned data-copy elements"],
+                        ["rescan", "() => void", "Re-scan for data-copy elements"],
+                      ].map(([name, type, desc]) => (
+                        <tr key={name} className="border-b border-border">
+                          <td className="px-4 py-2 font-mono">{name}</td>
+                          <td className="px-4 py-2 font-mono text-[11px]">{type}</td>
+                          <td className="px-4 py-2">{desc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* data-copy Attributes */}
+          <Section id="data-copy" title="data-copy Attribute System">
+            <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                Add <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">data-copy</code> attributes to
+                any HTML element to map it to a JSON path. When Edit Mode is activated, these elements become
+                contentEditable with real-time WebSocket sync.
+              </p>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">HTML markup</p>
+                <CodeBlock
+                  language="html"
+                  code={`<!-- Map elements to JSON paths using data-copy -->
+<h1 data-copy="home.hero.title">Welcome to My Site</h1>
+<p data-copy="home.hero.subtitle">This text is editable in real-time</p>
+<span data-copy="footer.copyright">© 2026 MyCompany</span>
+
+<!-- Nested paths work too -->
+<div data-copy="about.team.lead.name">John Doe</div>`}
+                />
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-xs font-medium text-foreground mb-2">How it works</p>
+                <ol className="text-xs space-y-1.5 list-decimal list-inside">
+                  <li>Elements with <code className="bg-muted px-1 rounded">data-copy</code> are scanned on mount</li>
+                  <li>When <strong>Edit Mode</strong> is activated (toggle button or <code className="bg-muted px-1 rounded">toggleEditMode()</code>), elements become <code className="bg-muted px-1 rounded">contentEditable</code></li>
+                  <li>A dashed outline highlights editable elements</li>
+                  <li>Text changes fire <code className="bg-muted px-1 rounded">input</code> events → synced to JSON via <code className="bg-muted px-1 rounded">setPath()</code></li>
+                  <li>JSON changes from other WebSocket clients update element text automatically</li>
+                  <li>Deactivating Edit Mode removes contentEditable and outlines</li>
+                </ol>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Edit mode activation</p>
+                <CodeBlock
+                  language="tsx"
+                  code={`// Option 1: Floating button (auto-injected by default)
+// A "✏️ Edit Mode" button appears in bottom-right corner
+const j = useJsonify({ injectToggle: true }); // default
+
+// Option 2: Custom button
+const j = useJsonify({ injectToggle: false });
+
+<button onClick={j.toggleEditMode}>
+  {j.editMode ? "✅ Stop Editing" : "✏️ Edit Mode"}
+</button>
+
+// Option 3: Programmatic
+j.setEditMode(true);  // activate
+j.setEditMode(false); // deactivate`}
+                />
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Full example with WebSocket sync</p>
+                <CodeBlock
+                  language="tsx"
+                  code={`import { useJsonify } from "jsonify-ws";
+
+function Website() {
+  const j = useJsonify({
+    url: process.env.VITE_WSL_URL,
+    autoConnect: true,
+    initialData: {
+      home: {
+        hero: { title: "Welcome", subtitle: "Edit anything" },
+        features: { heading: "Our Features" },
+      },
+      footer: { copyright: "© 2026" },
+    },
+  });
+
+  return (
+    <div>
+      {/* Status bar */}
+      <nav>
+        <span style={{
+          width: 8, height: 8, borderRadius: "50%",
+          background: j.status === "connected" ? "#22c55e"
+            : j.status === "connecting" ? "#eab308" : "#888",
+          display: "inline-block"
+        }} />
+        <button onClick={j.toggleEditMode}>
+          {j.editMode ? "✅ Editing" : "✏️ Edit"}
+        </button>
+      </nav>
+
+      {/* All data-copy elements are editable in edit mode */}
+      <section>
+        <h1 data-copy="home.hero.title">{j.data.home?.hero?.title}</h1>
+        <p data-copy="home.hero.subtitle">{j.data.home?.hero?.subtitle}</p>
+      </section>
+
+      <section>
+        <h2 data-copy="home.features.heading">
+          {j.data.home?.features?.heading}
+        </h2>
+      </section>
+
+      <footer>
+        <span data-copy="footer.copyright">{j.data.footer?.copyright}</span>
+      </footer>
+    </div>
+  );
+}`}
+                />
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">Standalone utilities (no React required)</p>
+                <CodeBlock
+                  language="typescript"
+                  code={`import {
+  scanDataCopyElements,
+  enableEditMode,
+  disableEditMode,
+  syncElementsFromData,
+  getByPath,
+  setByPath,
+  injectEditToggle,
+} from "jsonify-ws";
+
+// Scan the document for data-copy elements
+const elements = scanDataCopyElements(document);
+
+// Enable/disable contentEditable
+enableEditMode(elements);
+disableEditMode(elements);
+
+// Sync JSON data to element text content
+syncElementsFromData(elements, { home: { title: "Updated!" } });
+
+// Path utilities
+getByPath({ a: { b: "hello" } }, "a.b");        // "hello"
+setByPath({ a: { b: "hello" } }, "a.b", "world"); // { a: { b: "world" } }
+
+// Inject floating toggle button
+const cleanup = injectEditToggle(document, (active) => {
+  if (active) enableEditMode(elements);
+  else disableEditMode(elements);
+});
+
+// Remove toggle button
+cleanup();`}
+                />
+              </div>
+
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <p className="text-xs font-medium text-primary mb-1">💡 Tip: iframes</p>
+                <p className="text-xs text-muted-foreground">
+                  Pass an iframe's <code className="bg-muted px-1 rounded">contentDocument</code> as{" "}
+                  <code className="bg-muted px-1 rounded">targetDocument</code> to scan and edit elements inside an iframe.
+                </p>
+              </div>
+            </div>
+          </Section>
+
           <Section id="server-setup" title="Server Setup">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
@@ -422,7 +750,7 @@ console.log(\`[socket.io] Server running on http://localhost:\${PORT}\`);`}
           </Section>
 
           {/* React Hook */}
-          <Section id="react-hook" title="React Hook API">
+          <Section id="react-hook" title="useJsonifyWs Hook (Low-Level)">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
                 Copy{" "}
