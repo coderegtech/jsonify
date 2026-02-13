@@ -5,6 +5,12 @@ import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  proxy: {
+    "/api": {
+      target: "https://integrations.fruitask.com",
+      changeOrigin: true,
+    },
+  },
   server: {
     host: "::",
     port: 3000,
