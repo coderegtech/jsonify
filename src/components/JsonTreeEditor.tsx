@@ -1,16 +1,16 @@
 import { JsonValue } from "@/hooks/useJsonEditor";
-import { JsonNode } from "./JsonNode";
 import { StorageConfig } from "@/lib/storage-config";
 import {
+  FileText,
+  Link,
+  Plus,
+  Redo2,
   Search,
   Undo2,
-  Redo2,
   Upload,
-  Link,
-  FileText,
-  Plus,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
+import { JsonNode } from "./JsonNode";
 
 interface JsonTreeEditorProps {
   data: JsonValue;
@@ -18,6 +18,7 @@ interface JsonTreeEditorProps {
   onUpdate: (path: (string | number)[], value: JsonValue) => void;
   onDelete: (path: (string | number)[]) => void;
   onAdd: (path: (string | number)[], key: string, value: JsonValue) => void;
+  onDuplicate: (path: (string | number)[]) => void;
   onRename: (path: (string | number)[], newKey: string) => void;
   onSearch: (query: string) => void;
   onUndo: () => void;
@@ -35,6 +36,7 @@ export function JsonTreeEditor({
   onUpdate,
   onDelete,
   onAdd,
+  onDuplicate,
   onRename,
   onSearch,
   onUndo,
@@ -45,9 +47,9 @@ export function JsonTreeEditor({
   onSetData,
   storageConfig,
 }: JsonTreeEditorProps) {
-  const [importMode, setImportMode] = useState<
-    null | "paste" | "url" | "file"
-  >(null);
+  const [importMode, setImportMode] = useState<null | "paste" | "url" | "file">(
+    null,
+  );
   const [pasteValue, setPasteValue] = useState("");
   const [urlValue, setUrlValue] = useState("");
   const [importError, setImportError] = useState("");
@@ -103,7 +105,6 @@ export function JsonTreeEditor({
         ? data.map((v, i) => [i, v] as const)
         : Object.entries(data as Record<string, JsonValue>)
       : [];
-
 
   return (
     <div className="flex flex-col h-full">
@@ -222,6 +223,7 @@ export function JsonTreeEditor({
             onUpdate={onUpdate}
             onDelete={onDelete}
             onAdd={onAdd}
+            onDuplicate={onDuplicate}
             onRename={onRename}
             searchQuery={searchQuery}
             depth={0}
@@ -235,7 +237,12 @@ export function JsonTreeEditor({
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-4 py-2 transition-colors"
           onClick={() => {
             const key = prompt("Enter key name:");
-            if (key && typeof data === "object" && data !== null && !Array.isArray(data)) {
+            if (
+              key &&
+              typeof data === "object" &&
+              data !== null &&
+              !Array.isArray(data)
+            ) {
               onAdd([], key, "");
             }
           }}

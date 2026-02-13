@@ -1,10 +1,12 @@
+"use client";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { JsonValue } from "./useJsonEditor";
 
 type WsStatus = "disconnected" | "connecting" | "connected";
 
-const DEFAULT_WS_URL = "http://localhost:4000";
+const DEFAULT_WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:4000";
 
 export function useWebSocket(
   data: JsonValue,

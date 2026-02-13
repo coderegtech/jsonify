@@ -25,6 +25,7 @@ interface JsonNodeProps {
   onUpdate: (path: (string | number)[], value: JsonValue) => void;
   onDelete: (path: (string | number)[]) => void;
   onAdd: (path: (string | number)[], key: string, value: JsonValue) => void;
+  onDuplicate: (path: (string | number)[]) => void;
   onRename: (path: (string | number)[], newKey: string) => void;
   searchQuery: string;
   depth?: number;
@@ -39,6 +40,7 @@ export function JsonNode({
   onUpdate,
   onDelete,
   onAdd,
+  onDuplicate,
   onRename,
   searchQuery,
   depth = 0,
@@ -137,15 +139,6 @@ export function JsonNode({
     setNewFieldType("string");
   };
 
-  const handleDuplicateColumn = () => {
-    if (!isExpandable) return;
-    const newKey =
-      type === "array"
-        ? String((value as JsonValue[]).length)
-        : `${keyName}_copy`;
-    onAdd(path, newKey, value);
-  };
-
   const matches = matchesSearch(String(keyName), value, searchQuery);
   const hasChildMatch =
     isExpandable && searchQuery
@@ -178,6 +171,7 @@ export function JsonNode({
 
       <div
         className="flex items-center gap-1 py-1 px-2 rounded-md hover:bg-accent/50 transition-colors"
+        onClick={() => isExpandable && setExpanded(!expanded)}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
         {/* Expand toggle */}
@@ -292,7 +286,10 @@ export function JsonNode({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover/node:opacity-100 transition-opacity ml-auto">
+        <div
+          onClick={(event) => event.stopPropagation()}
+          className="flex items-center gap-0.5 opacity-0 group-hover/node:opacity-100 transition-opacity ml-auto"
+        >
           {/* Type changer */}
           <select
             className="bg-input border border-border rounded text-[10px] px-1 py-0.5 text-muted-foreground focus:outline-none"
@@ -311,7 +308,7 @@ export function JsonNode({
           {isExpandable && (
             <button
               className="p-1 rounded hover:bg-primary/20 text-primary transition-colors"
-              onClick={() => handleDuplicateColumn()}
+              onClick={() => onDuplicate(path)}
               title="Duplicate Column"
             >
               <Files className="w-3.5 h-3.5" />
@@ -321,13 +318,15 @@ export function JsonNode({
           {isExpandable && (
             <button
               className="p-1 rounded hover:bg-primary/20 text-primary transition-colors"
-              onClick={() => setAddingField(true)}
+              onClick={() => {
+                setAddingField(true);
+                setExpanded(true);
+              }}
               title="Add field"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
           )}
-
           {depth > 0 && (
             <button
               className="p-1 rounded hover:bg-destructive/20 text-destructive transition-colors"
@@ -380,6 +379,7 @@ export function JsonNode({
               onUpdate={onUpdate}
               onDelete={onDelete}
               onAdd={onAdd}
+              onDuplicate={onDuplicate}
               onRename={onRename}
               searchQuery={searchQuery}
               depth={depth + 1}

@@ -58,6 +58,11 @@ export function ExportPanel({
       toast.error("Please enter an API endpoint URL");
       return;
     }
+
+    setApiKey((prev) =>
+      apiUrl.trim().replace("https://integrations.fruitask.com", "/api"),
+    );
+
     localStorage.setItem("apiUrl", apiUrl);
     localStorage.setItem("apiKey", apiKey);
     setSending(true);
@@ -82,21 +87,57 @@ export function ExportPanel({
 
       const res = await fetch(apiUrl, fetchOptions);
 
-      if (res.ok) {
-        if (method === "GET") {
-          // Fetch data from API and load into editor
-          const responseData = await res.json();
-          if (onLoadData) {
-            onLoadData(responseData);
-            toast.success("JSON data loaded from API");
-          } else {
-            toast.error("Cannot load data: onLoadData callback not provided");
-          }
-        } else {
-          toast.success(`${method} successful (${res.status})`);
-        }
-      } else {
+      if (!res.ok) {
         toast.error(`Request failed: ${res.status} ${res.statusText}`);
+        setSending(false);
+        return;
+      }
+
+      // with specific column: https://integrations.fruitask.com/{table_name}/{token}/rows/{row_id}/cells/{column_id}
+      // without specific column: https://integrations.fruitask.com/{table_name}/{token}/rows
+
+      if (method === "GET") {
+        // Fetch data from API and load into editor
+        const responseData = await res.json();
+
+        if (!responseData.data || !responseData.data.rows) {
+          toast.error("Invalid response format: missing data.rows");
+          setSending(false);
+          return;
+        }
+
+        // cors problem, change apiUrl from https://integrations.fruitask.com to /api
+
+        const withSpecificColumn = /\/cells\/[^/]+$/.test(apiUrl);
+        const withoutSpecificColumn = /\/rows\/?$/.test(apiUrl);
+        let jsonData: JsonValue = null;
+
+        if (withoutSpecificColumn) {
+          jsonData = responseData.data.rows.map(({ cells }) =>
+            Object.entries(cells).reduce(
+              (acc, [key, cell]: [string, { value: unknown }]) => {
+                acc[key] = cell?.value;
+                return acc;
+              },
+              {},
+            ),
+          );
+        }
+
+        if (withSpecificColumn) {
+          jsonData = responseData.data?.value;
+        }
+
+        if (!onLoadData) {
+          toast.error("Cannot load data: onLoadData callback not provided");
+          setSending(false);
+          return;
+        }
+
+        onLoadData(jsonData);
+        toast.success("JSON data loaded from API");
+      } else {
+        toast.success(`${method} successful (${res.status})`);
       }
     } catch (e) {
       toast.error("Request failed: " + (e as Error).message);
@@ -163,6 +204,18 @@ export function ExportPanel({
 
       {showApiPanel && (
         <div className="space-y-2 p-3 bg-card rounded-md border border-border">
+          <p className="text-xs text-muted-foreground">
+            Note: This is a generic API sync feature, only supports in{" "}
+            <a
+              className="underline"
+              href="https://works.fruitask.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Fruitask
+            </a>{" "}
+            API.
+          </p>
           <div className="flex items-center gap-2">
             <select
               className="bg-input border border-border rounded text-xs px-2 py-1 focus:outline-none"

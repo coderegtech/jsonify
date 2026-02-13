@@ -41,7 +41,7 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card shrink-0">
+      <header className="flex flex-col md:flex-row gap-4 md:items-center justify-between px-4 py-2.5 border-b border-border bg-card shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Braces className="w-5 h-5 text-primary" />
@@ -131,6 +131,7 @@ const Index = () => {
               onUpdate={editor.updatePath}
               onDelete={editor.deletePath}
               onAdd={editor.addField}
+              onDuplicate={editor.duplicateField}
               onRename={editor.renamePath}
               onSearch={editor.setSearch}
               onUndo={editor.undo}
@@ -154,7 +155,7 @@ const Index = () => {
         {/* Collapsed toggle */}
         {leftCollapsed && (
           <button
-            className="flex items-center justify-center w-10 border-r border-border bg-card hover:bg-accent transition-colors"
+            className="flex items-start pt-3 justify-center w-10 border-r border-border bg-card hover:bg-accent transition-colors"
             onClick={() => setLeftCollapsed(false)}
           >
             <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />

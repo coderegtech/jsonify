@@ -198,6 +198,30 @@ export function useJsonEditor() {
     [state.data, setData],
   );
 
+  const duplicateField = useCallback(
+    (path: (string | number)[]) => {
+      if (path.length === 0) return;
+      const newData = structuredClone(state.data);
+      let parent: any = newData;
+      for (let i = 0; i < path.length - 1; i++) {
+        parent = parent[path[i]];
+      }
+      const key = path[path.length - 1];
+      if (Array.isArray(parent)) {
+        parent.splice(
+          (key as number) + 1,
+          0,
+          structuredClone(parent[key as number]),
+        );
+      } else if (typeof parent === "object" && parent !== null) {
+        const newKey = `${key}`;
+        parent[newKey] = structuredClone(parent[key as string]);
+      }
+      setData(newData);
+    },
+    [state.data, setData],
+  );
+
   const renamePath = useCallback(
     (path: (string | number)[], newKey: string) => {
       if (path.length === 0) return;
@@ -225,6 +249,7 @@ export function useJsonEditor() {
     updatePath,
     deletePath,
     addField,
+    duplicateField,
     renamePath,
     undo,
     redo,
