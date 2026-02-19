@@ -1,0 +1,36 @@
+name: Publish jsonify-ws to NPM
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install root deps
+        run: pnpm install
+
+      - name: Build package
+        run: |
+          cd packages/jsonify-ws
+          pnpm install
+          pnpm build
+
+      - name: Publish package
+        run: |
+          cd packages/jsonify-ws
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
