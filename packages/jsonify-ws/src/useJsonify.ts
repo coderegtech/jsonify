@@ -8,6 +8,7 @@ import {
   syncElementsFromData,
   setByPath,
   injectEditToggle,
+  injectWsStatusIndicator,
   type DataCopyElement,
 } from "./data-copy";
 
@@ -59,6 +60,11 @@ export interface UseJsonifyOptions {
    * Auto-inject the floating edit toggle button. Default: true
    */
   injectToggle?: boolean;
+
+  /**
+   * Auto-inject the WebSocket connection status indicator. Default: false
+   */
+  injectStatusIndicator?: boolean;
 }
 
 export interface UseJsonifyReturn {
@@ -146,6 +152,7 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
     onError,
     targetDocument,
     injectToggle = true,
+    injectStatusIndicator = false,
   } = options;
 
   const resolvedUrl = resolveUrl(optionsUrl);
@@ -160,6 +167,7 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   const editModeRef = useRef(editMode);
   const elementsRef = useRef(elements);
   const cleanupToggleRef = useRef<(() => void) | null>(null);
+  const wsStatusRef = useRef<{ cleanup: () => void; updateStatus: (status: WsStatus) => void } | null>(null);
 
   dataRef.current = data;
   editModeRef.current = editMode;
@@ -169,6 +177,8 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
     (s: WsStatus) => {
       setStatus(s);
       onStatusChange?.(s);
+      // Update the visual status indicator if injected
+      wsStatusRef.current?.updateStatus(s);
     },
     [onStatusChange],
   );
@@ -313,6 +323,22 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
       cleanupToggleRef.current?.();
     };
   }, [injectToggle, targetDocument, setEditMode]);
+
+  // Inject WebSocket status indicator
+  useEffect(() => {
+    if (!injectStatusIndicator) return;
+    const doc = targetDocument || (typeof document !== "undefined" ? document : null);
+    if (!doc) return;
+
+    wsStatusRef.current = injectWsStatusIndicator(doc);
+    // Set initial status
+    wsStatusRef.current.updateStatus(status);
+
+    return () => {
+      wsStatusRef.current?.cleanup();
+      wsStatusRef.current = null;
+    };
+  }, [injectStatusIndicator, targetDocument]);
 
   // Initial scan
   useEffect(() => {
