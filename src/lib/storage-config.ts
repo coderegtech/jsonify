@@ -3,6 +3,8 @@ export interface StorageConfig {
   apiKey: string;
   bucket: string;
   publicUrl: string;
+  subPath?: string;
+  isPublic: boolean;
 }
 
 export const defaultStorageConfig: StorageConfig = {
@@ -10,6 +12,8 @@ export const defaultStorageConfig: StorageConfig = {
   apiKey: "",
   bucket: "",
   publicUrl: "",
+  subPath: "",
+  isPublic: true,
 };
 
 export async function uploadFileToStorage(
@@ -29,6 +33,10 @@ export async function uploadFileToStorage(
     if (config.bucket.trim()) {
       formData.append("bucket", config.bucket);
     }
+    if (config.subPath?.trim()) {
+      formData.append("subPath", config.subPath);
+    }
+    formData.append("isPublic", String(config.isPublic));
 
     const storeUrl = config.apiUrl.replace(/\/$/, "") + "/api/v1/store";
 
