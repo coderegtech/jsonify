@@ -23,7 +23,7 @@ jobs:
         run: |
           cd packages/jsonify-ws
           npm install
-          npm build
+          npm run build
 
       - name: Version Patch
         run: |
