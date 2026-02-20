@@ -71,3 +71,17 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## CI/CD Setup
+
+This repository includes a GitHub Actions workflow that automatically publishes the `jsonify-ws` package to NPM on every push to `main`. The workflow requires an NPM access token to be stored as a repository secret.
+
+### Adding the `NPM_TOKEN` secret
+
+1. Generate an NPM access token at [npmjs.com](https://www.npmjs.com/) → **Account Settings** → **Access Tokens** → **Generate New Token** (select **Automation** type).
+2. In your GitHub repository, go to **Settings** → **Secrets and variables** → **Actions**.
+3. Click **New repository secret**.
+4. Set the **Name** to `NPM_TOKEN` and paste your NPM token as the **Secret**.
+5. Click **Add secret**.
+
+The workflow will now be able to authenticate with NPM and publish packages automatically.
