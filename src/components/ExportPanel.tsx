@@ -4,6 +4,7 @@ import {
   Copy,
   Database,
   Download,
+  FolderOpen,
   Globe,
   HardDrive,
   Key,
@@ -330,6 +331,36 @@ export function ExportPanel({
                 }
               />
             </div>
+          </div>
+          <div className="flex items-center gap-1 bg-input border border-border rounded px-2 py-1">
+            <FolderOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <input
+              className="bg-transparent text-xs w-full focus:outline-none font-mono"
+              placeholder="Sub path (optional, e.g., images/avatars)"
+              value={storageConfig.subPath || ""}
+              onChange={(e) =>
+                onStorageConfigChange({
+                  ...storageConfig,
+                  subPath: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={storageConfig.isPublic}
+                onChange={(e) =>
+                  onStorageConfigChange({
+                    ...storageConfig,
+                    isPublic: e.target.checked,
+                  })
+                }
+                className="rounded border-border"
+              />
+              <span>Public file access</span>
+            </label>
           </div>
           <p className="text-[10px] text-muted-foreground">
             Configure storage API to enable file uploads in the JSON editor.

@@ -65,6 +65,11 @@ export interface UseJsonifyOptions {
    * Auto-inject the WebSocket connection status indicator. Default: false
    */
   injectStatusIndicator?: boolean;
+
+  /**
+   * Persist edit mode state in localStorage. Default: true
+   */
+  persistEditMode?: boolean;
 }
 
 export interface UseJsonifyReturn {
@@ -153,12 +158,25 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
     targetDocument,
     injectToggle = true,
     injectStatusIndicator = false,
+    persistEditMode = true,
   } = options;
 
   const resolvedUrl = resolveUrl(optionsUrl);
   const [data, setDataState] = useState<Record<string, JsonValue>>(initialData);
   const [status, setStatus] = useState<WsStatus>("disconnected");
-  const [editMode, setEditModeState] = useState(false);
+
+  // Load edit mode from localStorage if persistEditMode is enabled
+  const getInitialEditMode = (): boolean => {
+    if (!persistEditMode) return false;
+    try {
+      const saved = localStorage.getItem("jsonify-edit-mode");
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  };
+
+  const [editMode, setEditModeState] = useState(getInitialEditMode);
   const [elements, setElements] = useState<DataCopyElement[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
@@ -276,6 +294,16 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   const setEditMode = useCallback(
     (active: boolean) => {
       setEditModeState(active);
+
+      // Persist to localStorage if enabled
+      if (persistEditMode) {
+        try {
+          localStorage.setItem("jsonify-edit-mode", JSON.stringify(active));
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
+
       const currentElements = elementsRef.current.length > 0 ? elementsRef.current : (rescan() || []);
 
       if (active) {
@@ -302,7 +330,7 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
         disableEditMode(currentElements);
       }
     },
-    [rescan],
+    [rescan, persistEditMode],
   );
 
   const toggleEditMode = useCallback(() => {
@@ -344,6 +372,17 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   useEffect(() => {
     rescan();
   }, [rescan]);
+
+  // Re-apply edit mode after initial scan if it was persisted
+  useEffect(() => {
+    if (editMode && elements.length > 0) {
+      // Small delay to ensure DOM is ready
+      const timeout = setTimeout(() => {
+        setEditMode(true);
+      }, 0);
+      return () => clearTimeout(timeout);
+    }
+  }, [elements.length, editMode, setEditMode]);
 
   return {
     data,
