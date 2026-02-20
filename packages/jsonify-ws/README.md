@@ -72,17 +72,18 @@ function App() {
 
 The primary hook — combines WebSocket sync with `data-copy` attribute scanning and contentEditable.
 
-| Option             | Type                          | Default                | Description                          |
-| ------------------ | ----------------------------- | ---------------------- | ------------------------------------ |
-| `url`              | `string`                      | `WSL_URL` env          | WebSocket server URL                 |
-| `autoConnect`      | `boolean`                     | `false`                | Connect on mount                     |
-| `initialData`      | `Record<string, JsonValue>`   | `{}`                   | Initial JSON state                   |
-| `reconnectionDelay`| `number`                      | `3000`                 | Reconnection delay (ms)              |
-| `onSync`           | `(data) => void`              | —                      | Callback on remote data received     |
-| `onStatusChange`   | `(status) => void`            | —                      | Callback on connection status change |
-| `onError`          | `(error) => void`             | —                      | Callback on connection error         |
-| `targetDocument`   | `Document`                    | `window.document`      | Target document for data-copy scan   |
-| `injectToggle`     | `boolean`                     | `true`                 | Auto-inject floating edit button     |
+| Option                | Type                          | Default                | Description                              |
+| --------------------- | ----------------------------- | ---------------------- | ---------------------------------------- |
+| `url`                 | `string`                      | `WSL_URL` env          | WebSocket server URL                     |
+| `autoConnect`         | `boolean`                     | `false`                | Connect on mount                         |
+| `initialData`         | `Record<string, JsonValue>`   | `{}`                   | Initial JSON state                       |
+| `reconnectionDelay`   | `number`                      | `3000`                 | Reconnection delay (ms)                  |
+| `onSync`              | `(data) => void`              | —                      | Callback on remote data received         |
+| `onStatusChange`      | `(status) => void`            | —                      | Callback on connection status change     |
+| `onError`             | `(error) => void`             | —                      | Callback on connection error             |
+| `targetDocument`      | `Document`                    | `window.document`      | Target document for data-copy scan       |
+| `injectToggle`        | `boolean`                     | `true`                 | Auto-inject floating edit button         |
+| `injectStatusIndicator`| `boolean`                    | `false`                | Auto-inject WS status indicator (bottom-left) |
 
 **Returns:**
 
@@ -158,6 +159,22 @@ When **Edit Mode** is activated:
 3. JSON changes (from other clients) update the element text automatically
 4. A floating "✏️ Edit Mode" button appears (configurable via `injectToggle`)
 
+### WebSocket Status Indicator
+
+Enable `injectStatusIndicator` to show a real-time connection status badge:
+
+```tsx
+const j = useJsonify({
+  autoConnect: true,
+  injectStatusIndicator: true, // Shows status in bottom-left corner
+});
+```
+
+The indicator displays:
+- 🔴 **Red** — Disconnected
+- 🟡 **Yellow (pulsing)** — Connecting
+- 🟢 **Green** — Connected
+
 ### Standalone utilities
 
 ```ts
@@ -168,6 +185,8 @@ import {
   syncElementsFromData,
   getByPath,
   setByPath,
+  injectEditToggle,
+  injectWsStatusIndicator,
 } from "jsonify-ws";
 
 // Scan for elements
@@ -182,6 +201,15 @@ syncElementsFromData(elements, { home: { title: "Updated!" } });
 // Path utilities
 const val = getByPath({ a: { b: "hello" } }, "a.b"); // "hello"
 const updated = setByPath({ a: { b: "hello" } }, "a.b", "world"); // { a: { b: "world" } }
+
+// Inject floating edit toggle button
+const cleanupToggle = injectEditToggle(document, (active) => {
+  console.log("Edit mode:", active);
+});
+
+// Inject WebSocket status indicator
+const { cleanup, updateStatus } = injectWsStatusIndicator(document);
+updateStatus("connected"); // "disconnected" | "connecting" | "connected"
 ```
 
 ## How It Works
