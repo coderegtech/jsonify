@@ -10,7 +10,13 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "version:patch": "npm version patch -m \"chore(release): v%s\"",
+    "version:minor": "npm version minor -m \"chore(release): v%s\"",
+    "version:major": "npm version major -m \"chore(release): v%s\"",
+    "version:ws:patch": "cd packages/jsonify-ws && npm version patch --no-git-tag-version",
+    "version:ws:minor": "cd packages/jsonify-ws && npm version minor --no-git-tag-version",
+    "version:ws:major": "cd packages/jsonify-ws && npm version major --no-git-tag-version"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -3,6 +3,19 @@ name: Publish jsonify-ws to NPM
 on:
   push:
     branches: [main]
+    paths:
+      - "packages/jsonify-ws/**"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   publish:
@@ -10,6 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
@@ -25,10 +40,26 @@ jobs:
           npm install
           npm run build
 
-      - name: Version Patch
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
         run: |
           cd packages/jsonify-ws
-          npm version patch
+          BUMP_TYPE="${{ github.event.inputs.version || 'patch' }}"
+          NEW_VERSION=$(npm version $BUMP_TYPE --no-git-tag-version)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped to $NEW_VERSION ($BUMP_TYPE)"
+
+      - name: Commit version bump
+        run: |
+          git add packages/jsonify-ws/package.json
+          git commit -m "chore(jsonify-ws): bump to ${{ steps.version.outputs.new_version }}"
+          git tag "jsonify-ws/${{ steps.version.outputs.new_version }}"
+          git push origin main --tags
 
       - name: Publish package
         run: |
