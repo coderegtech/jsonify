@@ -36,7 +36,7 @@ export async function uploadFileToStorage(
     if (config.subPath?.trim()) {
       formData.append("subPath", config.subPath);
     }
-    formData.append("isPublic", String(config.isPublic));
+    formData.append("public", String(config.isPublic));
 
     const storeUrl = config.apiUrl.replace(/\/$/, "") + "/api/v1/store";
 

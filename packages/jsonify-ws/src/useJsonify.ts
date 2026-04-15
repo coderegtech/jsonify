@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import type { JsonValue, WsStatus } from "./types";
 import {
-  scanDataCopyElements,
-  enableEditMode,
   disableEditMode,
-  syncElementsFromData,
-  setByPath,
+  enableEditMode,
   injectEditToggle,
   injectWsStatusIndicator,
+  scanDataCopyElements,
+  setByPath,
+  syncElementsFromData,
   type DataCopyElement,
 } from "./data-copy";
+import type { JsonValue, WsStatus } from "./types";
 
 export interface UseJsonifyOptions {
   /**
@@ -103,7 +103,10 @@ function resolveUrl(optionsUrl?: string): string {
   if (optionsUrl) return optionsUrl;
 
   // Support Vite env
-  if (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_WSL_URL) {
+  if (
+    typeof import.meta !== "undefined" &&
+    (import.meta as any).env?.VITE_WSL_URL
+  ) {
     return (import.meta as any).env.VITE_WSL_URL;
   }
   if (typeof import.meta !== "undefined" && (import.meta as any).env?.WSL_URL) {
@@ -119,6 +122,37 @@ function resolveUrl(optionsUrl?: string): string {
   }
 
   return "http://localhost:4000";
+}
+
+/**
+ * Check if edit mode is enabled via environment variable.
+ * Set EDIT_MODE=true (or VITE_EDIT_MODE / REACT_APP_EDIT_MODE) to enable editing.
+ * Returns false if not set, disabling edit features.
+ */
+export function isEditModeEnabled(): boolean {
+  // Support Vite env
+  if (
+    typeof import.meta !== "undefined" &&
+    (import.meta as any).env?.VITE_EDIT_MODE
+  ) {
+    return (import.meta as any).env.VITE_EDIT_MODE === "true";
+  }
+  if (
+    typeof import.meta !== "undefined" &&
+    (import.meta as any).env?.EDIT_MODE
+  ) {
+    return (import.meta as any).env.EDIT_MODE === "true";
+  }
+
+  // Support process.env (Node / CRA / Next.js)
+  if (typeof process !== "undefined" && process.env?.REACT_APP_EDIT_MODE) {
+    return process.env.REACT_APP_EDIT_MODE === "true";
+  }
+  if (typeof process !== "undefined" && process.env?.EDIT_MODE) {
+    return process.env.EDIT_MODE === "true";
+  }
+
+  return false;
 }
 
 /**
@@ -147,6 +181,8 @@ function resolveUrl(optionsUrl?: string): string {
  * ```
  */
 export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
+  const editModeEnabled = isEditModeEnabled();
+
   const {
     url: optionsUrl,
     autoConnect = false,
@@ -156,7 +192,7 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
     onStatusChange,
     onError,
     targetDocument,
-    injectToggle = true,
+    injectToggle = editModeEnabled, // Only inject if EDIT_MODE=true
     injectStatusIndicator = false,
     persistEditMode = true,
   } = options;
@@ -185,7 +221,10 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   const editModeRef = useRef(editMode);
   const elementsRef = useRef(elements);
   const cleanupToggleRef = useRef<(() => void) | null>(null);
-  const wsStatusRef = useRef<{ cleanup: () => void; updateStatus: (status: WsStatus) => void } | null>(null);
+  const wsStatusRef = useRef<{
+    cleanup: () => void;
+    updateStatus: (status: WsStatus) => void;
+  } | null>(null);
 
   dataRef.current = data;
   editModeRef.current = editMode;
@@ -283,7 +322,8 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
 
   // Scan for data-copy elements
   const rescan = useCallback(() => {
-    const doc = targetDocument || (typeof document !== "undefined" ? document : null);
+    const doc =
+      targetDocument || (typeof document !== "undefined" ? document : null);
     if (!doc) return;
     const found = scanDataCopyElements(doc);
     setElements(found);
@@ -293,6 +333,9 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   // Handle edit mode toggle
   const setEditMode = useCallback(
     (active: boolean) => {
+      // Ignore if EDIT_MODE env is not enabled
+      if (!editModeEnabled) return;
+
       setEditModeState(active);
 
       // Persist to localStorage if enabled
@@ -304,7 +347,8 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
         }
       }
 
-      const currentElements = elementsRef.current.length > 0 ? elementsRef.current : (rescan() || []);
+      const currentElements =
+        elementsRef.current.length > 0 ? elementsRef.current : rescan() || [];
 
       if (active) {
         enableEditMode(currentElements);
@@ -323,7 +367,10 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
         // Remove input listeners
         for (const item of currentElements) {
           if ((item.element as any).__jsonifyHandler) {
-            item.element.removeEventListener("input", (item.element as any).__jsonifyHandler);
+            item.element.removeEventListener(
+              "input",
+              (item.element as any).__jsonifyHandler,
+            );
             delete (item.element as any).__jsonifyHandler;
           }
         }
@@ -340,7 +387,8 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   // Inject floating toggle button
   useEffect(() => {
     if (!injectToggle) return;
-    const doc = targetDocument || (typeof document !== "undefined" ? document : null);
+    const doc =
+      targetDocument || (typeof document !== "undefined" ? document : null);
     if (!doc) return;
 
     cleanupToggleRef.current = injectEditToggle(doc, (active) => {
@@ -355,7 +403,8 @@ export function useJsonify(options: UseJsonifyOptions = {}): UseJsonifyReturn {
   // Inject WebSocket status indicator
   useEffect(() => {
     if (!injectStatusIndicator) return;
-    const doc = targetDocument || (typeof document !== "undefined" ? document : null);
+    const doc =
+      targetDocument || (typeof document !== "undefined" ? document : null);
     if (!doc) return;
 
     wsStatusRef.current = injectWsStatusIndicator(doc);

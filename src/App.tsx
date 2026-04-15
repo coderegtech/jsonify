@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { JsonEditorProvider } from "./contexts/JsonEditorContext";
 import Docs from "./pages/Docs";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -15,12 +16,14 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/docs" element={<Docs />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <JsonEditorProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/docs" element={<Docs />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </JsonEditorProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

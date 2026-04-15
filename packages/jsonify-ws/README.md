@@ -8,7 +8,9 @@ Real-time JSON synchronization over WebSocket using Socket.IO. Provides React ho
 npm install jsonify-ws socket.io-client
 ```
 
-## Environment Variable
+## Environment Variables
+
+### WebSocket URL
 
 Set `WSL_URL` to your WebSocket server URL:
 
@@ -24,6 +26,23 @@ WSL_URL=http://localhost:4000
 ```
 
 > If not set, defaults to `http://localhost:4000`.
+
+### Edit Mode
+
+Set `EDIT_MODE=true` to enable inline content editing. When not set or `false`, edit features are disabled (no toggle button, no contentEditable).
+
+```env
+# .env (Vite)
+VITE_EDIT_MODE=true
+
+# .env (CRA / Next.js)
+REACT_APP_EDIT_MODE=true
+
+# Or set directly
+EDIT_MODE=true
+```
+
+> **Note:** Edit mode is disabled by default. Set `EDIT_MODE=true` only in environments where you want editing capabilities.
 
 ## Quick Start
 
@@ -72,35 +91,35 @@ function App() {
 
 The primary hook — combines WebSocket sync with `data-copy` attribute scanning and contentEditable.
 
-| Option                | Type                          | Default                | Description                              |
-| --------------------- | ----------------------------- | ---------------------- | ---------------------------------------- |
-| `url`                 | `string`                      | `WSL_URL` env          | WebSocket server URL                     |
-| `autoConnect`         | `boolean`                     | `false`                | Connect on mount                         |
-| `initialData`         | `Record<string, JsonValue>`   | `{}`                   | Initial JSON state                       |
-| `reconnectionDelay`   | `number`                      | `3000`                 | Reconnection delay (ms)                  |
-| `onSync`              | `(data) => void`              | —                      | Callback on remote data received         |
-| `onStatusChange`      | `(status) => void`            | —                      | Callback on connection status change     |
-| `onError`             | `(error) => void`             | —                      | Callback on connection error             |
-| `targetDocument`      | `Document`                    | `window.document`      | Target document for data-copy scan       |
-| `injectToggle`        | `boolean`                     | `true`                 | Auto-inject floating edit button         |
-| `injectStatusIndicator`| `boolean`                    | `false`                | Auto-inject WS status indicator (bottom-left) |
+| Option                  | Type                        | Default           | Description                                                 |
+| ----------------------- | --------------------------- | ----------------- | ----------------------------------------------------------- |
+| `url`                   | `string`                    | `WSL_URL` env     | WebSocket server URL                                        |
+| `autoConnect`           | `boolean`                   | `false`           | Connect on mount                                            |
+| `initialData`           | `Record<string, JsonValue>` | `{}`              | Initial JSON state                                          |
+| `reconnectionDelay`     | `number`                    | `3000`            | Reconnection delay (ms)                                     |
+| `onSync`                | `(data) => void`            | —                 | Callback on remote data received                            |
+| `onStatusChange`        | `(status) => void`          | —                 | Callback on connection status change                        |
+| `onError`               | `(error) => void`           | —                 | Callback on connection error                                |
+| `targetDocument`        | `Document`                  | `window.document` | Target document for data-copy scan                          |
+| `injectToggle`          | `boolean`                   | `EDIT_MODE` env   | Auto-inject floating edit button (only if `EDIT_MODE=true`) |
+| `injectStatusIndicator` | `boolean`                   | `false`           | Auto-inject WS status indicator (bottom-left)               |
 
 **Returns:**
 
-| Property         | Type                             | Description                    |
-| ---------------- | -------------------------------- | ------------------------------ |
-| `data`           | `Record<string, JsonValue>`      | Current synced JSON data       |
-| `setData`        | `(data) => void`                 | Update all data (broadcasts)   |
-| `setPath`        | `(path, value) => void`          | Update a single dot-path       |
-| `status`         | `WsStatus`                       | Connection status              |
-| `connect`        | `(url?) => void`                 | Connect to server              |
-| `disconnect`     | `() => void`                     | Disconnect from server         |
-| `url`            | `string`                         | Resolved WebSocket URL         |
-| `editMode`       | `boolean`                        | Whether edit mode is active    |
-| `toggleEditMode` | `() => void`                     | Toggle edit mode on/off        |
-| `setEditMode`    | `(active) => void`               | Set edit mode explicitly       |
-| `elements`       | `DataCopyElement[]`              | Scanned data-copy elements     |
-| `rescan`         | `() => void`                     | Re-scan for data-copy elements |
+| Property         | Type                        | Description                    |
+| ---------------- | --------------------------- | ------------------------------ |
+| `data`           | `Record<string, JsonValue>` | Current synced JSON data       |
+| `setData`        | `(data) => void`            | Update all data (broadcasts)   |
+| `setPath`        | `(path, value) => void`     | Update a single dot-path       |
+| `status`         | `WsStatus`                  | Connection status              |
+| `connect`        | `(url?) => void`            | Connect to server              |
+| `disconnect`     | `() => void`                | Disconnect from server         |
+| `url`            | `string`                    | Resolved WebSocket URL         |
+| `editMode`       | `boolean`                   | Whether edit mode is active    |
+| `toggleEditMode` | `() => void`                | Toggle edit mode on/off        |
+| `setEditMode`    | `(active) => void`          | Set edit mode explicitly       |
+| `elements`       | `DataCopyElement[]`         | Scanned data-copy elements     |
+| `rescan`         | `() => void`                | Re-scan for data-copy elements |
 
 ---
 
@@ -108,26 +127,26 @@ The primary hook — combines WebSocket sync with `data-copy` attribute scanning
 
 Lower-level hook — WebSocket sync only (no data-copy support).
 
-| Option             | Type                          | Default                | Description                          |
-| ------------------ | ----------------------------- | ---------------------- | ------------------------------------ |
-| `url`              | `string`                      | `WSL_URL` env          | WebSocket server URL                 |
-| `autoConnect`      | `boolean`                     | `false`                | Connect on mount                     |
-| `initialData`      | `JsonValue`                   | `{}`                   | Initial JSON state                   |
-| `reconnectionDelay`| `number`                      | `3000`                 | Reconnection delay (ms)              |
-| `onSync`           | `(data: JsonValue) => void`   | —                      | Callback on remote data received     |
-| `onStatusChange`   | `(status: WsStatus) => void`  | —                      | Callback on connection status change |
-| `onError`          | `(error: Error) => void`      | —                      | Callback on connection error         |
+| Option              | Type                         | Default       | Description                          |
+| ------------------- | ---------------------------- | ------------- | ------------------------------------ |
+| `url`               | `string`                     | `WSL_URL` env | WebSocket server URL                 |
+| `autoConnect`       | `boolean`                    | `false`       | Connect on mount                     |
+| `initialData`       | `JsonValue`                  | `{}`          | Initial JSON state                   |
+| `reconnectionDelay` | `number`                     | `3000`        | Reconnection delay (ms)              |
+| `onSync`            | `(data: JsonValue) => void`  | —             | Callback on remote data received     |
+| `onStatusChange`    | `(status: WsStatus) => void` | —             | Callback on connection status change |
+| `onError`           | `(error: Error) => void`     | —             | Callback on connection error         |
 
 **Returns:**
 
-| Property     | Type                          | Description                    |
-| ------------ | ----------------------------- | ------------------------------ |
-| `data`       | `JsonValue`                   | Current synced JSON data       |
-| `setData`    | `(data: JsonValue) => void`   | Update data (broadcasts)       |
-| `status`     | `WsStatus`                    | `"disconnected" \| "connecting" \| "connected"` |
-| `connect`    | `(url?: string) => void`      | Connect to server              |
-| `disconnect` | `() => void`                  | Disconnect from server         |
-| `url`        | `string`                      | Resolved WebSocket URL         |
+| Property     | Type                        | Description                                     |
+| ------------ | --------------------------- | ----------------------------------------------- |
+| `data`       | `JsonValue`                 | Current synced JSON data                        |
+| `setData`    | `(data: JsonValue) => void` | Update data (broadcasts)                        |
+| `status`     | `WsStatus`                  | `"disconnected" \| "connecting" \| "connected"` |
+| `connect`    | `(url?: string) => void`    | Connect to server                               |
+| `disconnect` | `() => void`                | Disconnect from server                          |
+| `url`        | `string`                    | Resolved WebSocket URL                          |
 
 ---
 
@@ -154,6 +173,7 @@ Add `data-copy` attributes to any HTML element to map it to a JSON path:
 ```
 
 When **Edit Mode** is activated:
+
 1. Elements with `data-copy` get a dashed outline and become `contentEditable`
 2. Text changes are synced to the JSON data in real-time
 3. JSON changes (from other clients) update the element text automatically
@@ -171,6 +191,7 @@ const j = useJsonify({
 ```
 
 The indicator displays:
+
 - 🔴 **Red** — Disconnected
 - 🟡 **Yellow (pulsing)** — Connecting
 - 🟢 **Green** — Connected
@@ -187,7 +208,13 @@ import {
   setByPath,
   injectEditToggle,
   injectWsStatusIndicator,
+  isEditModeEnabled,
 } from "jsonify-ws";
+
+// Check if EDIT_MODE env var is enabled
+if (isEditModeEnabled()) {
+  console.log("Edit mode is enabled!");
+}
 
 // Scan for elements
 const elements = scanDataCopyElements(document);

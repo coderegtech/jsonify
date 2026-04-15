@@ -1,14 +1,19 @@
-export { useJsonifyWs } from "./useJsonifyWs";
-export { useJsonify } from "./useJsonify";
-export type { UseJsonifyOptions, UseJsonifyReturn } from "./useJsonify";
-export type { JsonifyWsOptions, JsonifyWsReturn, WsStatus, JsonValue } from "./types";
 export {
-  scanDataCopyElements,
-  enableEditMode,
   disableEditMode,
-  syncElementsFromData,
+  enableEditMode,
   getByPath,
-  setByPath,
   injectEditToggle,
+  scanDataCopyElements,
+  setByPath,
+  syncElementsFromData,
   type DataCopyElement,
 } from "./data-copy";
+export type {
+  JsonifyWsOptions,
+  JsonifyWsReturn,
+  JsonValue,
+  WsStatus,
+} from "./types";
+export { isEditModeEnabled, useJsonify } from "./useJsonify";
+export type { UseJsonifyOptions, UseJsonifyReturn } from "./useJsonify";
+export { useJsonifyWs } from "./useJsonifyWs";

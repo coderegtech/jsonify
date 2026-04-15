@@ -2,8 +2,7 @@ import { ExportPanel } from "@/components/ExportPanel";
 import { JsonPreview } from "@/components/JsonPreview";
 import { JsonTreeEditor } from "@/components/JsonTreeEditor";
 import { WebsitePreview } from "@/components/WebsitePreview";
-import { useJsonEditor } from "@/hooks/useJsonEditor";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { useEditorContext } from "@/contexts/JsonEditorContext";
 import { StorageConfig, defaultStorageConfig } from "@/lib/storage-config";
 import {
   BookOpen,
@@ -15,23 +14,18 @@ import {
   PanelLeftOpen,
   Radio,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
-type RightTab = "preview" | "website";
-
 const Index = () => {
-  const editor = useJsonEditor();
-  const { setData } = editor;
-  const handleRemoteUpdate = useCallback(
-    (data: import("@/hooks/useJsonEditor").JsonValue) => {
-      setData(data, false);
-    },
-    [setData],
-  );
-  const ws = useWebSocket(editor.data, handleRemoteUpdate);
-  const [rightTab, setRightTab] = useState<RightTab>("preview");
-  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const {
+    ws,
+    rightTab,
+    setRightTab,
+    leftCollapsed,
+    setLeftCollapsed,
+    ...editor
+  } = useEditorContext();
   const [storageConfig, setStorageConfig] = useState<StorageConfig>(
     localStorage.getItem("storageConfig")
       ? JSON.parse(localStorage.getItem("storageConfig")!)
