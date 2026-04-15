@@ -5,7 +5,7 @@ Real-time JSON synchronization over WebSocket using Socket.IO. Provides React ho
 ## Install
 
 ```bash
-npm install jsonify-ws socket.io-client
+npm install @coderegtech/jsonify-ws socket.io-client
 ```
 
 ## Environment Variables
@@ -56,7 +56,7 @@ npx jsonify-ws-server
 ```
 
 ```ts
-import { createJsonifyServer } from "jsonify-ws/server";
+import { createJsonifyServer } from "@coderegtech/jsonify-ws/server";
 
 createJsonifyServer(4000); // port, cors origin
 ```
@@ -64,7 +64,7 @@ createJsonifyServer(4000); // port, cors origin
 ### 2. Use the `useJsonify()` hook
 
 ```tsx
-import { useJsonify } from "jsonify-ws";
+import { useJsonify } from "@coderegtech/jsonify-ws";
 
 function App() {
   const j = useJsonify({
@@ -155,7 +155,7 @@ Lower-level hook — WebSocket sync only (no data-copy support).
 Creates a Socket.IO server that broadcasts JSON updates between clients.
 
 ```ts
-import { createJsonifyServer } from "jsonify-ws/server";
+import { createJsonifyServer } from "@coderegtech/jsonify-ws/server";
 
 const io = createJsonifyServer(4000, "*");
 ```
@@ -209,7 +209,7 @@ import {
   injectEditToggle,
   injectWsStatusIndicator,
   isEditModeEnabled,
-} from "jsonify-ws";
+} from "@coderegtech/jsonify-ws";
 
 // Check if EDIT_MODE env var is enabled
 if (isEditModeEnabled()) {
