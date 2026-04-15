@@ -1,6 +1,6 @@
 {
   "name": "@coderegtech/jsonify-ws",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Real-time JSON sync over WebSocket using Socket.IO. Drop-in React hook + Node server for collaborative JSON editing.",
   "keywords": [
     "json",
