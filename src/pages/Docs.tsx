@@ -277,41 +277,99 @@ const Docs = () => {
           <Section id="npm-package" title="NPM Package">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                Install the <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">jsonify-ws</code> npm
-                package to add real-time JSON sync and <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">data-copy</code> content editing to any React app.
+                Install the{" "}
+                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                  @coderegtech/jsonify-ws
+                </code>{" "}
+                npm package to add real-time JSON sync and{" "}
+                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                  data-copy
+                </code>{" "}
+                content editing to any React app.
               </p>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Install</p>
-                <CodeBlock code={`npm install jsonify-ws socket.io-client`} />
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Install
+                </p>
+                <CodeBlock
+                  code={`npm install @coderegtech/jsonify-ws socket.io-client`}
+                />
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Environment Variable</p>
-                <CodeBlock language="env" code={`# .env (Vite)
+                <p className="text-xs font-medium text-foreground mb-2">
+                  WebSocket URL
+                </p>
+                <CodeBlock
+                  language="env"
+                  code={`# .env (Vite)
 VITE_WSL_URL=http://localhost:4000
 
 # .env (CRA / Next.js)
 REACT_APP_WSL_URL=http://localhost:4000
 
 # Fallback
-WSL_URL=http://localhost:4000`} />
+WSL_URL=http://localhost:4000`}
+                />
                 <p className="mt-2 text-xs">
-                  If not set, defaults to <code className="bg-muted px-1 rounded font-mono text-[11px]">http://localhost:4000</code>.
+                  If not set, defaults to{" "}
+                  <code className="bg-muted px-1 rounded font-mono text-[11px]">
+                    http://localhost:4000
+                  </code>
+                  .
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Edit Mode
+                </p>
+                <CodeBlock
+                  language="env"
+                  code={`# .env (Vite)
+VITE_EDIT_MODE=true
+
+# .env (CRA / Next.js)
+REACT_APP_EDIT_MODE=true
+
+# Or set directly
+EDIT_MODE=true`}
+                />
+                <p className="mt-2 text-xs">
+                  Set{" "}
+                  <code className="bg-muted px-1 rounded font-mono text-[11px]">
+                    EDIT_MODE=true
+                  </code>{" "}
+                  to enable inline content editing. When not set or{" "}
+                  <code className="bg-muted px-1 rounded font-mono text-[11px]">
+                    false
+                  </code>
+                  , edit features are disabled (no toggle button, no
+                  contentEditable).
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="rounded-lg border border-border bg-card p-4">
-                  <p className="text-sm font-medium text-foreground mb-1">useJsonify()</p>
+                  <p className="text-sm font-medium text-foreground mb-1">
+                    useJsonify()
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    Full-featured hook with WebSocket sync + <code className="bg-muted px-1 rounded text-[11px]">data-copy</code> contentEditable
+                    Full-featured hook with WebSocket sync +{" "}
+                    <code className="bg-muted px-1 rounded text-[11px]">
+                      data-copy
+                    </code>{" "}
+                    contentEditable
                   </p>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-4">
-                  <p className="text-sm font-medium text-foreground mb-1">useJsonifyWs()</p>
+                  <p className="text-sm font-medium text-foreground mb-1">
+                    useJsonifyWs()
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    Lower-level hook — WebSocket sync only (no data-copy support)
+                    Lower-level hook — WebSocket sync only (no data-copy
+                    support)
                   </p>
                 </div>
               </div>
@@ -323,15 +381,19 @@ WSL_URL=http://localhost:4000`} />
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
                 The primary hook — combines WebSocket sync with{" "}
-                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">data-copy</code> attribute
-                scanning and contentEditable mode.
+                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                  data-copy
+                </code>{" "}
+                attribute scanning and contentEditable mode.
               </p>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Basic usage</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Basic usage
+                </p>
                 <CodeBlock
                   language="tsx"
-                  code={`import { useJsonify } from "jsonify-ws";
+                  code={`import { useJsonify } from "@coderegtech/jsonify-ws";
 
 function App() {
   const j = useJsonify({
@@ -365,33 +427,99 @@ function App() {
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Options</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Options
+                </p>
                 <div className="rounded-lg border border-border overflow-hidden">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-border bg-muted/50">
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Option</th>
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Type</th>
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Default</th>
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Description</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Option
+                        </th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Type
+                        </th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Default
+                        </th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Description
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="text-muted-foreground">
                       {[
-                        ["url", "string", "WSL_URL env", "WebSocket server URL"],
+                        [
+                          "url",
+                          "string",
+                          "WSL_URL env",
+                          "WebSocket server URL",
+                        ],
                         ["autoConnect", "boolean", "false", "Connect on mount"],
-                        ["initialData", "Record<string, JsonValue>", "{}", "Initial JSON state"],
-                        ["reconnectionDelay", "number", "3000", "Reconnection delay (ms)"],
-                        ["onSync", "(data) => void", "—", "Callback on remote data received"],
-                        ["onStatusChange", "(status) => void", "—", "Callback on status change"],
-                        ["onError", "(error) => void", "—", "Callback on error"],
-                        ["targetDocument", "Document", "window.document", "Target for data-copy scan"],
-                        ["injectToggle", "boolean", "true", "Auto-inject floating edit button"],
+                        [
+                          "initialData",
+                          "Record<string, JsonValue>",
+                          "{}",
+                          "Initial JSON state",
+                        ],
+                        [
+                          "reconnectionDelay",
+                          "number",
+                          "3000",
+                          "Reconnection delay (ms)",
+                        ],
+                        [
+                          "onSync",
+                          "(data) => void",
+                          "—",
+                          "Callback on remote data received",
+                        ],
+                        [
+                          "onStatusChange",
+                          "(status) => void",
+                          "—",
+                          "Callback on status change",
+                        ],
+                        [
+                          "onError",
+                          "(error) => void",
+                          "—",
+                          "Callback on error",
+                        ],
+                        [
+                          "targetDocument",
+                          "Document",
+                          "window.document",
+                          "Target for data-copy scan",
+                        ],
+                        [
+                          "injectToggle",
+                          "boolean",
+                          "EDIT_MODE env",
+                          "Auto-inject floating edit button (only if EDIT_MODE=true)",
+                        ],
+                        [
+                          "injectStatusIndicator",
+                          "boolean",
+                          "false",
+                          "Auto-inject WS status indicator (bottom-left)",
+                        ],
+                        [
+                          "persistEditMode",
+                          "boolean",
+                          "true",
+                          "Persist edit mode state in localStorage",
+                        ],
                       ].map(([name, type, def, desc]) => (
                         <tr key={name} className="border-b border-border">
                           <td className="px-4 py-2 font-mono">{name}</td>
-                          <td className="px-4 py-2 font-mono text-[11px]">{type}</td>
-                          <td className="px-4 py-2 font-mono text-[11px]">{def}</td>
+                          <td className="px-4 py-2 font-mono text-[11px]">
+                            {type}
+                          </td>
+                          <td className="px-4 py-2 font-mono text-[11px]">
+                            {def}
+                          </td>
                           <td className="px-4 py-2">{desc}</td>
                         </tr>
                       ))}
@@ -401,34 +529,72 @@ function App() {
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Return values</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Return values
+                </p>
                 <div className="rounded-lg border border-border overflow-hidden">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-border bg-muted/50">
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Property</th>
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Type</th>
-                        <th className="text-left px-4 py-2 font-medium text-foreground">Description</th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Property
+                        </th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Type
+                        </th>
+                        <th className="text-left px-4 py-2 font-medium text-foreground">
+                          Description
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="text-muted-foreground">
                       {[
-                        ["data", "Record<string, JsonValue>", "Current synced JSON data"],
-                        ["setData", "(data) => void", "Update all data (broadcasts)"],
-                        ["setPath", "(path, value) => void", "Update a single dot-path"],
+                        [
+                          "data",
+                          "Record<string, JsonValue>",
+                          "Current synced JSON data",
+                        ],
+                        [
+                          "setData",
+                          "(data) => void",
+                          "Update all data (broadcasts)",
+                        ],
+                        [
+                          "setPath",
+                          "(path, value) => void",
+                          "Update a single dot-path",
+                        ],
                         ["status", "WsStatus", "Connection status"],
                         ["connect", "(url?) => void", "Connect to server"],
                         ["disconnect", "() => void", "Disconnect from server"],
                         ["url", "string", "Resolved WebSocket URL"],
                         ["editMode", "boolean", "Whether edit mode is active"],
-                        ["toggleEditMode", "() => void", "Toggle edit mode on/off"],
-                        ["setEditMode", "(active) => void", "Set edit mode explicitly"],
-                        ["elements", "DataCopyElement[]", "Scanned data-copy elements"],
-                        ["rescan", "() => void", "Re-scan for data-copy elements"],
+                        [
+                          "toggleEditMode",
+                          "() => void",
+                          "Toggle edit mode on/off",
+                        ],
+                        [
+                          "setEditMode",
+                          "(active) => void",
+                          "Set edit mode explicitly",
+                        ],
+                        [
+                          "elements",
+                          "DataCopyElement[]",
+                          "Scanned data-copy elements",
+                        ],
+                        [
+                          "rescan",
+                          "() => void",
+                          "Re-scan for data-copy elements",
+                        ],
                       ].map(([name, type, desc]) => (
                         <tr key={name} className="border-b border-border">
                           <td className="px-4 py-2 font-mono">{name}</td>
-                          <td className="px-4 py-2 font-mono text-[11px]">{type}</td>
+                          <td className="px-4 py-2 font-mono text-[11px]">
+                            {type}
+                          </td>
                           <td className="px-4 py-2">{desc}</td>
                         </tr>
                       ))}
@@ -443,13 +609,19 @@ function App() {
           <Section id="data-copy" title="data-copy Attribute System">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                Add <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">data-copy</code> attributes to
-                any HTML element to map it to a JSON path. When Edit Mode is activated, these elements become
-                contentEditable with real-time WebSocket sync.
+                Add{" "}
+                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                  data-copy
+                </code>{" "}
+                attributes to any HTML element to map it to a JSON path. When
+                Edit Mode is activated, these elements become contentEditable
+                with real-time WebSocket sync.
               </p>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">HTML markup</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  HTML markup
+                </p>
                 <CodeBlock
                   language="html"
                   code={`<!-- Map elements to JSON paths using data-copy -->
@@ -463,24 +635,52 @@ function App() {
               </div>
 
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="text-xs font-medium text-foreground mb-2">How it works</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  How it works
+                </p>
                 <ol className="text-xs space-y-1.5 list-decimal list-inside">
-                  <li>Elements with <code className="bg-muted px-1 rounded">data-copy</code> are scanned on mount</li>
-                  <li>When <strong>Edit Mode</strong> is activated (toggle button or <code className="bg-muted px-1 rounded">toggleEditMode()</code>), elements become <code className="bg-muted px-1 rounded">contentEditable</code></li>
+                  <li>
+                    Elements with{" "}
+                    <code className="bg-muted px-1 rounded">data-copy</code> are
+                    scanned on mount
+                  </li>
+                  <li>
+                    When <strong>Edit Mode</strong> is activated (toggle button
+                    or{" "}
+                    <code className="bg-muted px-1 rounded">
+                      toggleEditMode()
+                    </code>
+                    ), elements become{" "}
+                    <code className="bg-muted px-1 rounded">
+                      contentEditable
+                    </code>
+                  </li>
                   <li>A dashed outline highlights editable elements</li>
-                  <li>Text changes fire <code className="bg-muted px-1 rounded">input</code> events → synced to JSON via <code className="bg-muted px-1 rounded">setPath()</code></li>
-                  <li>JSON changes from other WebSocket clients update element text automatically</li>
-                  <li>Deactivating Edit Mode removes contentEditable and outlines</li>
+                  <li>
+                    Text changes fire{" "}
+                    <code className="bg-muted px-1 rounded">input</code> events
+                    → synced to JSON via{" "}
+                    <code className="bg-muted px-1 rounded">setPath()</code>
+                  </li>
+                  <li>
+                    JSON changes from other WebSocket clients update element
+                    text automatically
+                  </li>
+                  <li>
+                    Deactivating Edit Mode removes contentEditable and outlines
+                  </li>
                 </ol>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Edit mode activation</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Edit mode activation
+                </p>
                 <CodeBlock
                   language="tsx"
-                  code={`// Option 1: Floating button (auto-injected by default)
+                  code={`// Option 1: Floating button (auto-injected when EDIT_MODE=true)
 // A "✏️ Edit Mode" button appears in bottom-right corner
-const j = useJsonify({ injectToggle: true }); // default
+const j = useJsonify({ injectToggle: true }); // defaults to EDIT_MODE env
 
 // Option 2: Custom button
 const j = useJsonify({ injectToggle: false });
@@ -496,10 +696,12 @@ j.setEditMode(false); // deactivate`}
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Full example with WebSocket sync</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Full example with WebSocket sync
+                </p>
                 <CodeBlock
                   language="tsx"
-                  code={`import { useJsonify } from "jsonify-ws";
+                  code={`import { useJsonify } from "@coderegtech/jsonify-ws";
 
 function Website() {
   const j = useJsonify({
@@ -551,7 +753,9 @@ function Website() {
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">Standalone utilities (no React required)</p>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  Standalone utilities (no React required)
+                </p>
                 <CodeBlock
                   language="typescript"
                   code={`import {
@@ -562,7 +766,14 @@ function Website() {
   getByPath,
   setByPath,
   injectEditToggle,
-} from "jsonify-ws";
+  injectWsStatusIndicator,
+  isEditModeEnabled,
+} from "@coderegtech/jsonify-ws";
+
+// Check if EDIT_MODE env var is enabled
+if (isEditModeEnabled()) {
+  console.log("Edit mode is enabled!");
+}
 
 // Scan the document for data-copy elements
 const elements = scanDataCopyElements(document);
@@ -583,17 +794,51 @@ const cleanup = injectEditToggle(document, (active) => {
   if (active) enableEditMode(elements);
   else disableEditMode(elements);
 });
+cleanup(); // Remove toggle button
 
-// Remove toggle button
-cleanup();`}
+// Inject WebSocket status indicator (bottom-left)
+const wsStatus = injectWsStatusIndicator(document);
+wsStatus.updateStatus("connected"); // "disconnected" | "connecting" | "connected"
+wsStatus.cleanup(); // Remove indicator`}
+                />
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-foreground mb-2">
+                  WebSocket Status Indicator
+                </p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Enable{" "}
+                  <code className="bg-muted px-1 rounded">
+                    injectStatusIndicator
+                  </code>{" "}
+                  to show a real-time connection status badge in the bottom-left
+                  corner:
+                </p>
+                <CodeBlock
+                  language="tsx"
+                  code={`const j = useJsonify({
+  autoConnect: true,
+  injectStatusIndicator: true, // Shows status in bottom-left corner
+});
+
+// The indicator displays:
+// 🔴 Red — Disconnected
+// 🟡 Yellow (pulsing) — Connecting
+// 🟢 Green — Connected`}
                 />
               </div>
 
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <p className="text-xs font-medium text-primary mb-1">💡 Tip: iframes</p>
+                <p className="text-xs font-medium text-primary mb-1">
+                  💡 Tip: iframes
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Pass an iframe's <code className="bg-muted px-1 rounded">contentDocument</code> as{" "}
-                  <code className="bg-muted px-1 rounded">targetDocument</code> to scan and edit elements inside an iframe.
+                  Pass an iframe's{" "}
+                  <code className="bg-muted px-1 rounded">contentDocument</code>{" "}
+                  as{" "}
+                  <code className="bg-muted px-1 rounded">targetDocument</code>{" "}
+                  to scan and edit elements inside an iframe.
                 </p>
               </div>
             </div>
@@ -602,11 +847,15 @@ cleanup();`}
           <Section id="server-setup" title="Server Setup">
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                The Socket.IO server is a standalone Node.js script located at{" "}
+                The Socket.IO server is located at{" "}
                 <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                  server/ws-server.ts
+                  packages/jsonify-ws/src/server.ts
                 </code>
-                .
+                . It exports a{" "}
+                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                  createJsonifyServer()
+                </code>{" "}
+                function.
               </p>
 
               <div>
@@ -617,7 +866,7 @@ cleanup();`}
                 <p className="mt-2">
                   Output:{" "}
                   <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                    [socket.io] Server running on http://localhost:4000
+                    [jsonify-ws] Server running on http://localhost:4000
                   </code>
                 </p>
               </div>
@@ -644,7 +893,13 @@ set WS_PORT=8080 && npm run ws:server`}
                 </p>
                 <CodeBlock
                   language="typescript"
-                  code={`import { Server } from "socket.io";
+                  code={`// Option A: Programmatic
+import { createJsonifyServer } from "@coderegtech/jsonify-ws/server";
+
+const io = createJsonifyServer(4000, "*"); // port, cors origin
+
+// Option B: Direct (equivalent to what createJsonifyServer does)
+import { Server } from "socket.io";
 
 const PORT = Number(process.env.WS_PORT) || 4000;
 
@@ -658,25 +913,27 @@ const io = new Server(PORT, {
 let latestData: unknown = null;
 
 io.on("connection", (socket) => {
-  console.log(\`[socket.io] Client connected\`);
+  console.log(\`[jsonify-ws] Client connected (\${io.engine.clientsCount} total)\`);
 
-  // Send current data to newly connected client
   if (latestData !== null) {
     socket.emit("sync", latestData);
   }
 
   socket.on("update", (data: unknown) => {
     latestData = data;
-    // Broadcast to all OTHER connected clients
     socket.broadcast.emit("sync", latestData);
   });
 
   socket.on("disconnect", () => {
-    console.log(\`[socket.io] Client disconnected\`);
+    console.log(\`[jsonify-ws] Client disconnected (\${io.engine.clientsCount} total)\`);
+  });
+
+  socket.on("error", (err) => {
+    console.error("[jsonify-ws] Socket error:", err);
   });
 });
 
-console.log(\`[socket.io] Server running on http://localhost:\${PORT}\`);`}
+console.log(\`[jsonify-ws] Server running on http://localhost:\${PORT}\`);`}
                 />
               </div>
 
@@ -1236,11 +1493,10 @@ socket.on("sync", (data) => {
                         http://localhost:4000
                       </td>
                       <td className="px-4 py-2">
-                        Header URL input or{" "}
-                        <code className="bg-muted px-1 rounded">
-                          DEFAULT_WS_URL
-                        </code>{" "}
-                        in useWebSocket.ts
+                        <code className="bg-muted px-1 rounded">WSL_URL</code>{" "}
+                        env variable or{" "}
+                        <code className="bg-muted px-1 rounded">url</code>{" "}
+                        option
                       </td>
                     </tr>
                     <tr className="border-b border-border">
@@ -1250,7 +1506,29 @@ socket.on("sync", (data) => {
                         <code className="bg-muted px-1 rounded">
                           reconnectionDelay
                         </code>{" "}
-                        option in useWebSocket.ts
+                        option
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-2">Edit mode</td>
+                      <td className="px-4 py-2 font-mono">false</td>
+                      <td className="px-4 py-2">
+                        <code className="bg-muted px-1 rounded">EDIT_MODE</code>{" "}
+                        env variable (VITE_EDIT_MODE / REACT_APP_EDIT_MODE)
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-2">Persist edit mode</td>
+                      <td className="px-4 py-2 font-mono">true</td>
+                      <td className="px-4 py-2">
+                        <code className="bg-muted px-1 rounded">
+                          persistEditMode
+                        </code>{" "}
+                        option (uses localStorage key{" "}
+                        <code className="bg-muted px-1 rounded">
+                          jsonify-edit-mode
+                        </code>
+                        )
                       </td>
                     </tr>
                     <tr>
