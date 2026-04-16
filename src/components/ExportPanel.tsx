@@ -60,10 +60,6 @@ export function ExportPanel({
       return;
     }
 
-    setApiKey((prev) =>
-      apiUrl.trim().replace("https://integrations.fruitask.com", "/api"),
-    );
-
     localStorage.setItem("apiUrl", apiUrl);
     localStorage.setItem("apiKey", apiKey);
     setSending(true);
